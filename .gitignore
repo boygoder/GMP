@@ -1,0 +1,5 @@
+*.o
+mycxxprog.cpp
+mycprog.c
+mycxxprog
+mycprog
