@@ -1,9 +1,11 @@
-mycprog: mycprog.c
-	gcc -g mycprog.c -o mycprog -lgmp
+CXX=g++
+CXXFLAGS=-g -std=c++17
+GMPLINKS=-lgmpxx -lgmp
 
-mycxxprog: mycxxprog.cpp
-	g++ -g -std=c++17 mycxxprog.cpp -o mycxxprog -lgmpxx -lgmp
+%: %.cpp
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(GMPLINKS)
 
-.Phony: clean
+.PHONY: clean
 clean:
-	rm mycprog mycxxprog
+	rm -f *.o
+
