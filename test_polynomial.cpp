@@ -132,10 +132,27 @@ void test_derivate()
   assert(p2_d.getCoeff() == coeff_p2d);
 }
 
+void test_brackets_operator()
+{
+  mpz_class degree_p1(2);
+  vector<mpf_class> coeff_p1 = {1,2,1};
+  polynomial p1(coeff_p1,degree_p1);
+  cout << "p1(x=-1) = " << p1(mpf_class(-1)) << endl;
+  cout << "p1(x=0) = " << p1(mpf_class(0)) << endl;
+  cout << "p1(x=1) = " << p1(mpf_class(1)) << endl;
+  cout << "p1(x=2) = " << p1(mpf_class(2)) << endl;
+  polynomial p2(p1);
+  mpf_class v2 = sqrt(p2(1)*p2(2));
+  assert(p1(-1) == 0);
+  assert(p1(0) == 1);
+  assert(p1(1) == 4);
+  assert(p1(2) == 9);
+}
 int main()
 {
   test_default_construct();
   test_construct();
+  test_brackets_operator();
   test_add_operator();
   test_sub_operator();
   test_multi_digit();

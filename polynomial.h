@@ -34,6 +34,11 @@ public:
 	polynomial(vector<mpf_class> _coeff, mpz_class _degree)
     :coeff{_coeff.begin(),_coeff.end()},degree{_degree}
 	{}
+  polynomial(const polynomial& poly)
+  {
+    coeff = poly.coeff;
+    degree = poly.degree;
+  }
   ~polynomial() = default;
   void setCoeff(vector<mpf_class> _coeff)
   {
@@ -158,6 +163,13 @@ public:
 			c = c + a2[i] * mpf_class_pow_ui(x, i);
 		return c;
 	}
+  mpf_class operator()(mpf_class x)
+  {
+		mpf_class c = 0;
+		for (int i = 0; i <= degree.get_ui(); i++)
+			c = c + coeff[i] * mpf_class_pow_ui(x, i);
+		return c; 
+  }
 	friend polynomial derivate(polynomial a)
 	{
 		mpz_class a1(a.degree);
