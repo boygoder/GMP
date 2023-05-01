@@ -1,53 +1,66 @@
 #ifndef __ORTHOGONAL_POLYNOMIALS__
 #define __ORTHOGONAL_POLYNOMIALS__
 #include "polynomial.h"
+#include <cstdint>
 #include <functional>
 #include <gmpxx.h>
 //Family of Orthogonal Polynomials
 class OrthogonalPolynomails
 {
-  private:
+  protected:
     mpf_class interval[2];
-    //function<mpf_class(mpf_class)> weightfunction;
     vector<polynomial> polynomials;
-    mpz_class highestdegree;
+    vector<polynomial> derivate_polynomials;
+    mpz_class highest_degree;
   public:
     OrthogonalPolynomails()
     {  
-      interval[0] = mpf_class(-1.0);
-      interval[1] = mpf_class(1.0);
-      highestdegree = mpz_class(0);
+      highest_degree = mpz_class(1);
     };
-    OrthogonalPolynomails(mpf_class _interval[],mpz_class _highestdegree)
-    {
-      for(int i = 0; i < 2; ++i) {
-        interval[i] = _interval[i];
-      }
-      highestdegree = _highestdegree;
+    OrthogonalPolynomails(mpz_class _highestdegree)
+    { 
+      highest_degree = max(mpz_class(1),_highestdegree);
     };
-    virtual ~OrthogonalPolynomails();
-    virtual vector<mpz_class> coefficientsOfRecurrence(mpz_class degree)=0; /*< a_n,b_n,c_,n,d_n */
+    virtual ~OrthogonalPolynomails() = default;
+    virtual vector<mpf_class> coefficientsOfRecurrence(mpz_class degree)=0; /*< a_n,b_n,c_,n,d_n */
     virtual vector<polynomial> coefficientsOfODE(mpz_class degree)=0;/*< p,q,r */
     virtual mpf_class weightfunction(mpf_class x) = 0;
+    virtual polynomial getPm(mpz_class m)/*<get Pm polynomial of degree m*/
+    {
+      return polynomials.at(m.get_ui());
+    }
+    virtual polynomial getDerivatePm(mpz_class m)/*<get P'm polynomial*/
+    {
+      return derivate_polynomials.at(m.get_ui());
+    }
 };
 
 
 class LegendrePolys: public OrthogonalPolynomails
 {
   public:
-    LegendrePolys():OrthogonalPolynomails(){};
-    LegendrePolys(mpf_class _interval[],mpz_class _highestdegree)
-      :OrthogonalPolynomails(_interval,_highestdegree)
-    {};
-    ~LegendrePolys();
-    // degree == n,a_{n}*P_{n+1} = (b_{n}+c_{n}*x)*P_{n}-d_{n}P_{n-1}
-    virtual vector<mpz_class> coefficientsOfRecurrence(mpz_class degree)
+    LegendrePolys():OrthogonalPolynomails()
     {
-      mpz_class a_n(degree+1);
-      mpz_class b_n(0);
-      mpz_class c_n(2*degree+1);
-      mpz_class d_n(degree);
-      vector<mpz_class> coefficients = {a_n,b_n,c_n,d_n};
+      interval[0] = mpf_class(-1);
+      interval[1] = mpf_class(1);
+      initialize();
+    };
+    LegendrePolys(mpz_class _highestdegree)
+      :OrthogonalPolynomails(_highestdegree)
+    {
+      interval[0] = mpf_class(-1);
+      interval[1] = mpf_class(1);
+      initialize(); 
+    };
+    ~LegendrePolys() = default;
+    // degree == n,a_{n}*P_{n+1} = (b_{n}+c_{n}*x)*P_{n}-d_{n}P_{n-1}
+    virtual vector<mpf_class> coefficientsOfRecurrence(mpz_class degree)
+    {
+      mpf_class a_n(degree+1);
+      mpf_class b_n(0);
+      mpf_class c_n(2*degree+1);
+      mpf_class d_n(degree);
+      vector<mpf_class> coefficients = {a_n,b_n,c_n,d_n};
       return coefficients;
     };
     virtual vector<polynomial> coefficientsOfODE(mpz_class degree)
@@ -55,7 +68,7 @@ class LegendrePolys: public OrthogonalPolynomails
       vector<mpf_class> p_coeff = {1,0,-1};
       mpz_class p_degree{2};
       polynomial p(p_coeff,p_degree);
-      vector<mpf_class> q_coeff = {0,1};
+      vector<mpf_class> q_coeff = {0,-2};
       mpz_class q_degree{1};
       polynomial q(q_coeff,q_degree);
       vector<mpf_class> r_coeff = {degree*(degree+1)};
@@ -68,15 +81,203 @@ class LegendrePolys: public OrthogonalPolynomails
     {
       return mpf_class{1};
     };
+  private:
+    //compute polynomial and derivate under highest_degree
+    void initialize()
+    {
+      int psize = highest_degree.get_ui() + 1;
+      polynomials.resize(psize);
+      derivate_polynomials.resize(psize);
+      //p0 = 1
+      mpz_class degree_p0(0);
+      vector<mpf_class> coeff_p0 = {1};
+      polynomial p0(coeff_p0,degree_p0);
+      polynomials.at(0) = p0;
+      polynomial p0_d = derivate(p0);
+      derivate_polynomials.at(0) = p0_d;
+      //p1 = x
+      mpz_class degree_p1(1);
+      vector<mpf_class> coeff_p1 = {0,1};
+      polynomial p1(coeff_p1,degree_p1);
+      polynomials.at(1) = p1;
+      polynomial p1_d = derivate(p1);
+      derivate_polynomials.at(1) = p1_d;
+      for(int i = 2; i <= highest_degree; ++i)
+      {
+        vector<mpf_class> recur = coefficientsOfRecurrence(mpz_class(i-1));
+        mpz_class degree_tmp(1);
+        vector<mpf_class> coeff_tmp = {recur[1]/recur[0],recur[2]/recur[0]};
+        polynomial tmp(coeff_tmp,degree_tmp);
+        polynomial pi = tmp*polynomials.at(i-1) - (recur[3]/recur[0])*polynomials.at(i-2);
+        polynomials.at(i) = pi;
+        polynomial pi_d = tmp*derivate_polynomials.at(i-1) - (recur[3]/recur[0])*derivate_polynomials.at(i-2) + (recur[2]/recur[0])*polynomials.at(i-1);
+        derivate_polynomials.at(i) = pi_d;
+      }
+    };
 };
 
 class HermitePolys: public OrthogonalPolynomails
 {
+public:
+    HermitePolys():OrthogonalPolynomails()
+    {
+      interval[0] = mpf_class(INT64_MIN);
+      interval[1] = mpf_class(INT64_MAX);
+      initialize();
+    };
+    HermitePolys(mpz_class _highestdegree)
+      :OrthogonalPolynomails(_highestdegree)
+    {
+      interval[0] = mpf_class(INT64_MIN);
+      interval[1] = mpf_class(INT64_MAX);
+      initialize(); 
+    };
+    ~HermitePolys() = default;
+    // degree == n,a_{n}*P_{n+1} = (b_{n}+c_{n}*x)*P_{n}-d_{n}P_{n-1}
+    virtual vector<mpf_class> coefficientsOfRecurrence(mpz_class degree)
+    {
+      mpf_class a_n(1);
+      mpf_class b_n(0);
+      mpf_class c_n(2);
+      mpf_class d_n(2*degree);
+      vector<mpf_class> coefficients = {a_n,b_n,c_n,d_n};
+      return coefficients;
+    };
+    virtual vector<polynomial> coefficientsOfODE(mpz_class degree)
+    {
+      vector<mpf_class> p_coeff = {1};
+      mpz_class p_degree{0};
+      polynomial p(p_coeff,p_degree);
+      vector<mpf_class> q_coeff = {0,-2};
+      mpz_class q_degree{1};
+      polynomial q(q_coeff,q_degree);
+      vector<mpf_class> r_coeff = {2*degree};
+      mpz_class r_degree{0};
+      polynomial r(r_coeff,r_degree);
+      vector<polynomial> coefficients = {p,q,r};
+      return coefficients;
+    };
+    virtual mpf_class weightfunction(mpf_class x)
+    {
+      mpf_class exception = -mpf_class_pow_ui(x, 2);
+      double res = exp(exception.get_d());
+      return mpf_class(res);
+    };
+  private:
+    //compute polynomial and derivate under highest_degree
+    void initialize()
+    {
+      int psize = highest_degree.get_ui() + 1;
+      polynomials.resize(psize);
+      derivate_polynomials.resize(psize);
+      //p0 = 1
+      mpz_class degree_p0(0);
+      vector<mpf_class> coeff_p0 = {1};
+      polynomial p0(coeff_p0,degree_p0);
+      polynomials.at(0) = p0;
+      polynomial p0_d = derivate(p0);
+      derivate_polynomials.at(0) = p0_d;
+      //p1 = x
+      mpz_class degree_p1(1);
+      vector<mpf_class> coeff_p1 = {0,2};
+      polynomial p1(coeff_p1,degree_p1);
+      polynomials.at(1) = p1;
+      polynomial p1_d = derivate(p1);
+      derivate_polynomials.at(1) = p1_d;
+      for(int i = 2; i <= highest_degree; ++i)
+      {
+        vector<mpf_class> recur = coefficientsOfRecurrence(mpz_class(i-1));
+        mpz_class degree_tmp(1);
+        vector<mpf_class> coeff_tmp = {recur[1]/recur[0],recur[2]/recur[0]};
+        polynomial tmp(coeff_tmp,degree_tmp);
+        polynomial pi = tmp*polynomials.at(i-1) - (recur[3]/recur[0])*polynomials.at(i-2);
+        polynomials.at(i) = pi;
+        polynomial pi_d = tmp*derivate_polynomials.at(i-1) - (recur[3]/recur[0])*derivate_polynomials.at(i-2) + (recur[2]/recur[0])*polynomials.at(i-1);
+        derivate_polynomials.at(i) = pi_d;
+      }
+    };
 
 };
 
 class LaguerrePolys: public OrthogonalPolynomails
 {
+public:
+    LaguerrePolys():OrthogonalPolynomails()
+    {
+      interval[0] = mpf_class(0);
+      interval[1] = mpf_class(INT64_MAX);
+      initialize();
+    };
+    LaguerrePolys(mpz_class _highestdegree)
+      :OrthogonalPolynomails(_highestdegree)
+    {
+      interval[0] = mpf_class(0);
+      interval[1] = mpf_class(INT64_MAX);
+      initialize(); 
+    };
+    ~LaguerrePolys() = default;
+    // degree == n,a_{n}*P_{n+1} = (b_{n}+c_{n}*x)*P_{n}-d_{n}P_{n-1}
+    virtual vector<mpf_class> coefficientsOfRecurrence(mpz_class degree)
+    {
+      mpf_class a_n(degree+1);
+      mpf_class b_n(2*degree+1);
+      mpf_class c_n(-1);
+      mpf_class d_n(degree);
+      vector<mpf_class> coefficients = {a_n,b_n,c_n,d_n};
+      return coefficients;
+    };
+    virtual vector<polynomial> coefficientsOfODE(mpz_class degree)
+    {
+      vector<mpf_class> p_coeff = {0,1};
+      mpz_class p_degree{1};
+      polynomial p(p_coeff,p_degree);
+      vector<mpf_class> q_coeff = {1,-1};
+      mpz_class q_degree{1};
+      polynomial q(q_coeff,q_degree);
+      vector<mpf_class> r_coeff = {degree};
+      mpz_class r_degree{0};
+      polynomial r(r_coeff,r_degree);
+      vector<polynomial> coefficients = {p,q,r};
+      return coefficients;
+    };
+    virtual mpf_class weightfunction(mpf_class x)
+    {
+      double res = exp(-x.get_d());
+      return mpf_class(res);
+    };
+  private:
+    //compute polynomial and derivate under highest_degree
+    void initialize()
+    {
+      int psize = highest_degree.get_ui() + 1;
+      polynomials.resize(psize);
+      derivate_polynomials.resize(psize);
+      //p0 = 1
+      mpz_class degree_p0(0);
+      vector<mpf_class> coeff_p0 = {1};
+      polynomial p0(coeff_p0,degree_p0);
+      polynomials.at(0) = p0;
+      polynomial p0_d = derivate(p0);
+      derivate_polynomials.at(0) = p0_d;
+      //p1 = x
+      mpz_class degree_p1(1);
+      vector<mpf_class> coeff_p1 = {1,-1};
+      polynomial p1(coeff_p1,degree_p1);
+      polynomials.at(1) = p1;
+      polynomial p1_d = derivate(p1);
+      derivate_polynomials.at(1) = p1_d;
+      for(int i = 2; i <= highest_degree; ++i)
+      {
+        vector<mpf_class> recur = coefficientsOfRecurrence(mpz_class(i-1));
+        mpz_class degree_tmp(1);
+        vector<mpf_class> coeff_tmp = {recur[1]/recur[0],recur[2]/recur[0]};
+        polynomial tmp(coeff_tmp,degree_tmp);
+        polynomial pi = tmp*polynomials.at(i-1) - (recur[3]/recur[0])*polynomials.at(i-2);
+        polynomials.at(i) = pi;
+        polynomial pi_d = tmp*derivate_polynomials.at(i-1) - (recur[3]/recur[0])*derivate_polynomials.at(i-2) + (recur[2]/recur[0])*polynomials.at(i-1);
+        derivate_polynomials.at(i) = pi_d;
+      }
+    };
 
 };
 #else
