@@ -1,13 +1,13 @@
 #ifndef __POLYNOMIAL__  
 #define __POLYNOMIAL__
 
+//Thanks to Tingyuan Wang's polynomial class;
 #include <gmpxx.h>
 #include <iostream>
 #include <vector>
 #include <cmath>
 #include <iostream>
 using namespace std;
-
 
 mpf_class mpf_class_pow_ui(mpf_class base,unsigned int exception)
 {
