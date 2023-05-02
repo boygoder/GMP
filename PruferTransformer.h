@@ -8,9 +8,6 @@
 #include <vector>
 using namespace std;
 
-const mpf_class pi(4.0*atan(1.0),256);
-const mpf_class eps = numeric_limits<double>::epsilon();
-
 class PruferTransformer
 {
   private:
@@ -33,14 +30,16 @@ PruferTransformer::PruferTransformer(polynomial& u, vector<polynomial>& coeff_OD
   polynomial q(coeff_ODE.at(1));
   polynomial r(coeff_ODE.at(2));
   theta_x = [=](mpf_class x) mutable{
-    mpf_class res;
-    if (abs(r(x)) < eps || abs(u(x)) < eps) {
-      res = pi/2.0;
+    mpf_class res(0,precision);
+    if (abs(r(x)) < zero_eps|| abs(u(x)) < zero_eps) {
+      res = pi/mpf_class(2.0,precision);
     }
     else {
       mpf_class part1 = sqrt(p(x)/r(x));
       mpf_class part2 = derivate_u(x)/u(x);
       mpf_class mul = part1*part2;
+      //we use atan function in std, which reduces the precision
+      // we only use this function for RungeKutta.
       res = atan(mul.get_d());
     }
 
@@ -51,13 +50,14 @@ PruferTransformer::PruferTransformer(polynomial& u, vector<polynomial>& coeff_OD
     polynomial derivate_r = derivate(r);
     polynomial tmp1 = derivate_r*p -  derivate_p*r + 2*r*q;
     mpf_class rx = r(x), px = p(x),tmp1x = tmp1(x);
-    mpf_class part1,part2,part3,part4;
-    mpf_class denominator(0);
-    if (abs(rx) < eps) {
+    mpf_class part1(0,precision),part2(0,precision);
+    mpf_class part3(0,precision),part4(0,precision);
+    mpf_class denominator(0,precision);
+    if (abs(rx) < zero_eps) {
       part1 = 0;
     }
-    else if (abs(px) < eps) {
-      part1 = INT64_MAX;
+    else if (abs(px) < zero_eps) {
+      part1 = infinity;
       // denominator = INT64_MAX;
     }
     else {
@@ -65,11 +65,11 @@ PruferTransformer::PruferTransformer(polynomial& u, vector<polynomial>& coeff_OD
     }
     part2 = tmp1x*sin(2*theta.get_d());
     part3 = 4*rx*px;
-    if (abs(part2) < eps) {
+    if (abs(part2) < zero_eps) {
       part4 = 0;
     }
-    else if (abs(part3) < eps) {
-      part4 = INT64_MAX;
+    else if (abs(part3) < zero_eps) {
+      part4 = infinity;
       // denominator = INT64_MAX;
     }
     else {
@@ -81,14 +81,14 @@ PruferTransformer::PruferTransformer(polynomial& u, vector<polynomial>& coeff_OD
       denominator = part1 + part4;
     // }
     mpf_class res;
-    if (abs(denominator) < eps) {
-      res = -INT64_MAX;
+    if (abs(denominator) < zero_eps) {
+      res = -infinity;
     }
-    else if (denominator >= INT64_MAX) {
+    else if (denominator >= infinity) {
       res = 0;
     }
     else {
-      res = -mpf_class(1.0)/denominator;
+      res = -mpf_class(1,precision)/denominator;
     }
     return res;
   };

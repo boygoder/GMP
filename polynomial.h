@@ -2,40 +2,27 @@
 #define __POLYNOMIAL__
 
 //Thanks to Tingyuan Wang's polynomial class;
-#include <gmpxx.h>
 #include <iostream>
 #include <vector>
 #include <cmath>
-#include <iostream>
+#include "gmptools.h"
 using namespace std;
 
-mpf_class mpf_class_pow_ui(mpf_class base,unsigned int exception)
-{
-  mpf_t base_t,result_t;
-  mpf_init2(base_t,base.get_prec());
-  mpf_set(base_t,base.get_mpf_t());
-  mpf_init2(result_t,base.get_prec());
-  mpf_pow_ui(result_t,base_t,exception);
-  mpf_class result(result_t,base.get_prec());
-  mpf_clear(base_t);
-  mpf_clear(result_t);
-  return result;
-};
 
 class polynomial
 {
 private:
-	vector<mpf_class> coeff;
-	mpz_class degree;
+	vector<mpf_class> coeff = {mpf_class(0,precision)};
+	mpz_class degree{0};
 public:
 	polynomial()
 	{
-		vector<mpf_class> _coeff(0);
-		coeff = _coeff;
-		degree = 0;
-	}
+		// vector<mpf_class> _coeff = {mpf_class(0,precision)};
+		// coeff = _coeff;
+	 //  degree = 0;
+  }
 	polynomial(vector<mpf_class> _coeff, mpz_class _degree)
-    :coeff{_coeff.begin(),_coeff.end()},degree{_degree}
+    :coeff{_coeff},degree{_degree}
 	{}
   polynomial(const polynomial& poly)
   {
@@ -75,7 +62,7 @@ public:
 	friend polynomial operator+(polynomial a, polynomial b)
 	{
 		mpz_class a1(a.degree);
-		vector<mpf_class> a2(a.coeff.begin(),a.coeff.end());
+    vector<mpf_class> a2(a.coeff);
 		mpz_class b1(b.degree);
 		vector<mpf_class> b2(b.coeff);
 		mpz_class n;
@@ -83,7 +70,7 @@ public:
 			n = a1;
 		else
 			n = b1;
-		vector<mpf_class> x(n.get_ui()+1);
+		vector<mpf_class> x(n.get_ui()+1,mpf_class(0,precision));
 		for (int i = 0; i <= n.get_ui(); i++)
 		{
 			if (i <= a1 && i <= b1)
@@ -93,22 +80,18 @@ public:
 			else
 				x[i] = b2[i];
 		}
-		polynomial c;
-		c.degree = n;
-		c.coeff = x;
+		polynomial c(x,n);
 		return c;
 	}
 	friend polynomial operator*(mpf_class x, polynomial a)
 	{
 		mpz_class n(a.degree);
-		vector<mpf_class> g(a.coeff.begin(),a.coeff.end());
+		vector<mpf_class> g(a.coeff);
 		mpz_class m(n);
-		vector<mpf_class> s(m.get_ui() + 1);
+		vector<mpf_class> s(m.get_ui() + 1,mpf_class(0,precision));
 		for (int i = 0; i <= m.get_ui(); i++)
 			s[i] = x * g[i];
-		polynomial c;
-		c.degree = m;
-		c.coeff = s;
+		polynomial c(s,m);
 		return c;
 	}
 	friend polynomial operator-(polynomial a, polynomial b)
@@ -120,11 +103,11 @@ public:
 	friend polynomial operator*(polynomial a, polynomial b)
 	{
 		mpz_class a1(a.degree);
-		vector<mpf_class> a2(a.coeff.begin(),a.coeff.end());
+		vector<mpf_class> a2(a.coeff);
 		mpz_class b1(b.degree);
-		vector<mpf_class> b2(b.coeff.begin(),b.coeff.end());
+		vector<mpf_class> b2(b.coeff);
 		mpz_class c = a1 + b1;
-		vector<mpf_class> d(c.get_ui() + 1);
+		vector<mpf_class> d(c.get_ui() + 1,mpf_class(0,precision));
 		for (int i = 0; i <= c.get_ui(); i++)
 		{
 			d[i] = 0;
@@ -134,9 +117,7 @@ public:
 					d[i] += a2[j] * b2[i - j];
 			}
 		}
-		polynomial e;
-		e.degree = c;
-		e.coeff = d;
+		polynomial e(d,c);
 		return e;
 	}
 	// polynomial interpolate(mpf_class first, vector<mpf_class> root)
@@ -160,15 +141,15 @@ public:
 	friend mpf_class pointValue(mpf_class x, polynomial a)
 	{
 		mpz_class a1 = a.degree;
-		vector<mpf_class> a2 = a.coeff;
-		mpf_class c(0,x.get_prec());
+		vector<mpf_class> a2(a.coeff);
+		mpf_class c(0,precision);
 		for (int i = 0; i <= a1.get_ui(); i++)
 			c = c + a2[i] * mpf_class_pow_ui(x, i);
 		return c;
 	}
   mpf_class operator()(mpf_class x)
   {
-		mpf_class c(0,x.get_prec());
+		mpf_class c(0,precision);
 		for (int i = 0; i <= degree.get_ui(); i++)
 			c = c + coeff[i] * mpf_class_pow_ui(x, i);
 		return c; 
@@ -176,13 +157,13 @@ public:
 	friend polynomial derivate(polynomial a)
 	{
 		mpz_class a1(a.degree);
-		vector<mpf_class> a2(a.coeff.begin(),a.coeff.end());
+		vector<mpf_class> a2(a.coeff);
 		mpz_class n;
 		if (a1 == 0)
 			n = 0;
 		else
 			n = a1 - 1;
-		vector<mpf_class> x(n.get_ui() + 1);
+		vector<mpf_class> x(n.get_ui() + 1,mpf_class(0,precision));
 		if (a1 != 0) {
 			for (int i = 0; i <= n.get_ui(); i++)
 				x[i] = a2[i + 1] * (i + 1);
@@ -190,9 +171,7 @@ public:
 		else {
 			x[0] = 0;
     }
-		polynomial e;
-		e.degree = n;
-		e.coeff = x;
+		polynomial e(x,n);
 		return e;
 	}
 	// mpf_class integration(polynomial poly, mpf_class a, mpf_class b)

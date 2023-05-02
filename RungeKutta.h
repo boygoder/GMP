@@ -1,6 +1,6 @@
 #ifndef __RUNGEKUTTA__
 #define __RUNGEKUTTA__
-#include <gmpxx.h>
+#include "gmptools.h"
 #include <functional>
 #include <vector>
 #include <assert.h>
@@ -15,12 +15,16 @@ class RungeKutta4
     //mpf_class step_length;
     //vector<mpf_class> end_condition(2);
   public:
-    RungeKutta4() = default;
+    RungeKutta4();
     RungeKutta4(vector<mpf_class> initial,func f);
     ~RungeKutta4() = default;
     mpf_class compute(mpf_class h, mpf_class end_x);
 
 };
+
+RungeKutta4::RungeKutta4()
+{
+}
 
 RungeKutta4::RungeKutta4(vector<mpf_class> initial, func f)
 {

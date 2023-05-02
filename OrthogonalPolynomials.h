@@ -1,9 +1,7 @@
 #ifndef __ORTHOGONAL_POLYNOMIALS__
 #define __ORTHOGONAL_POLYNOMIALS__
 #include "polynomial.h"
-#include <cstdint>
 #include <functional>
-#include <gmpxx.h>
 //Family of Orthogonal Polynomials
 class OrthogonalPolynomails
 {
@@ -41,37 +39,37 @@ class LegendrePolys: public OrthogonalPolynomails
   public:
     LegendrePolys():OrthogonalPolynomails()
     {
-      interval[0] = mpf_class(-1);
-      interval[1] = mpf_class(1);
+      interval[0] = mpf_class(-1,precision);
+      interval[1] = mpf_class(1,precision);
       initialize();
     };
     LegendrePolys(mpz_class _highestdegree)
       :OrthogonalPolynomails(_highestdegree)
     {
-      interval[0] = mpf_class(-1);
-      interval[1] = mpf_class(1);
+      interval[0] = mpf_class(-1,precision);
+      interval[1] = mpf_class(1,precision);
       initialize(); 
     };
     ~LegendrePolys() = default;
     // degree == n,a_{n}*P_{n+1} = (b_{n}+c_{n}*x)*P_{n}-d_{n}P_{n-1}
     virtual vector<mpf_class> coefficientsOfRecurrence(mpz_class degree)
     {
-      mpf_class a_n(degree+1);
-      mpf_class b_n(0);
-      mpf_class c_n(2*degree+1);
-      mpf_class d_n(degree);
+      mpf_class a_n(degree+1,precision);
+      mpf_class b_n(0,precision);
+      mpf_class c_n(2*degree+1,precision);
+      mpf_class d_n(degree,precision);
       vector<mpf_class> coefficients = {a_n,b_n,c_n,d_n};
       return coefficients;
     };
     virtual vector<polynomial> coefficientsOfODE(mpz_class degree)
     {
-      vector<mpf_class> p_coeff = {1,0,-1};
+      vector<mpf_class> p_coeff = {mpf_class(1,precision),mpf_class(0,precision),mpf_class(-1,precision)};
       mpz_class p_degree{2};
       polynomial p(p_coeff,p_degree);
-      vector<mpf_class> q_coeff = {0,-2};
+      vector<mpf_class> q_coeff = {mpf_class(0,precision),mpf_class(-2,precision)};
       mpz_class q_degree{1};
       polynomial q(q_coeff,q_degree);
-      vector<mpf_class> r_coeff = {degree*(degree+1)};
+      vector<mpf_class> r_coeff = {mpf_class(degree*(degree+1),precision)};
       mpz_class r_degree{0};
       polynomial r(r_coeff,r_degree);
       vector<polynomial> coefficients = {p,q,r};
@@ -79,7 +77,7 @@ class LegendrePolys: public OrthogonalPolynomails
     };
     virtual mpf_class weightfunction(mpf_class x)
     {
-      return mpf_class{1};
+      return mpf_class{1,precision};
     };
   private:
     //compute polynomial and derivate under highest_degree
@@ -90,14 +88,14 @@ class LegendrePolys: public OrthogonalPolynomails
       derivate_polynomials.resize(psize);
       //p0 = 1
       mpz_class degree_p0(0);
-      vector<mpf_class> coeff_p0 = {1};
+      vector<mpf_class> coeff_p0 = {mpf_class(1,precision)};
       polynomial p0(coeff_p0,degree_p0);
       polynomials.at(0) = p0;
       polynomial p0_d = derivate(p0);
       derivate_polynomials.at(0) = p0_d;
       //p1 = x
       mpz_class degree_p1(1);
-      vector<mpf_class> coeff_p1 = {0,1};
+      vector<mpf_class> coeff_p1 = {mpf_class(0,precision),mpf_class(1,precision)};
       polynomial p1(coeff_p1,degree_p1);
       polynomials.at(1) = p1;
       polynomial p1_d = derivate(p1);
@@ -121,37 +119,37 @@ class HermitePolys: public OrthogonalPolynomails
 public:
     HermitePolys():OrthogonalPolynomails()
     {
-      interval[0] = mpf_class(INT64_MIN);
-      interval[1] = mpf_class(INT64_MAX);
+      interval[0] = mpf_class(-infinity);
+      interval[1] = mpf_class(infinity);
       initialize();
     };
     HermitePolys(mpz_class _highestdegree)
       :OrthogonalPolynomails(_highestdegree)
     {
-      interval[0] = mpf_class(INT64_MIN);
-      interval[1] = mpf_class(INT64_MAX);
+      interval[0] = mpf_class(-infinity);
+      interval[1] = mpf_class(infinity);
       initialize(); 
     };
     ~HermitePolys() = default;
     // degree == n,a_{n}*P_{n+1} = (b_{n}+c_{n}*x)*P_{n}-d_{n}P_{n-1}
     virtual vector<mpf_class> coefficientsOfRecurrence(mpz_class degree)
     {
-      mpf_class a_n(1);
-      mpf_class b_n(0);
-      mpf_class c_n(2);
-      mpf_class d_n(2*degree);
+      mpf_class a_n(1,precision);
+      mpf_class b_n(0,precision);
+      mpf_class c_n(2,precision);
+      mpf_class d_n(2*degree,precision);
       vector<mpf_class> coefficients = {a_n,b_n,c_n,d_n};
       return coefficients;
     };
     virtual vector<polynomial> coefficientsOfODE(mpz_class degree)
     {
-      vector<mpf_class> p_coeff = {1};
+      vector<mpf_class> p_coeff = {mpf_class(1,precision)};
       mpz_class p_degree{0};
       polynomial p(p_coeff,p_degree);
-      vector<mpf_class> q_coeff = {0,-2};
+      vector<mpf_class> q_coeff = {mpf_class(0,precision),mpf_class(-2,precision)};
       mpz_class q_degree{1};
       polynomial q(q_coeff,q_degree);
-      vector<mpf_class> r_coeff = {2*degree};
+      vector<mpf_class> r_coeff = {mpf_class(2*degree,precision)};
       mpz_class r_degree{0};
       polynomial r(r_coeff,r_degree);
       vector<polynomial> coefficients = {p,q,r};
@@ -159,9 +157,9 @@ public:
     };
     virtual mpf_class weightfunction(mpf_class x)
     {
-      mpf_class exception = -mpf_class_pow_ui(x, 2);
+      mpf_class exception(-mpf_class_pow_ui(x, 2));
       double res = exp(exception.get_d());
-      return mpf_class(res);
+      return mpf_class(res,precision);
     };
   private:
     //compute polynomial and derivate under highest_degree
@@ -172,14 +170,14 @@ public:
       derivate_polynomials.resize(psize);
       //p0 = 1
       mpz_class degree_p0(0);
-      vector<mpf_class> coeff_p0 = {1};
+      vector<mpf_class> coeff_p0 = {mpf_class(1,precision)};
       polynomial p0(coeff_p0,degree_p0);
       polynomials.at(0) = p0;
       polynomial p0_d = derivate(p0);
       derivate_polynomials.at(0) = p0_d;
       //p1 = x
       mpz_class degree_p1(1);
-      vector<mpf_class> coeff_p1 = {0,2};
+      vector<mpf_class> coeff_p1 = {mpf_class(0,precision),mpf_class(2,256)};
       polynomial p1(coeff_p1,degree_p1);
       polynomials.at(1) = p1;
       polynomial p1_d = derivate(p1);
@@ -204,37 +202,37 @@ class LaguerrePolys: public OrthogonalPolynomails
 public:
     LaguerrePolys():OrthogonalPolynomails()
     {
-      interval[0] = mpf_class(0);
-      interval[1] = mpf_class(INT64_MAX);
+      interval[0] = mpf_class(0,precision);
+      interval[1] = mpf_class(infinity,precision);
       initialize();
     };
     LaguerrePolys(mpz_class _highestdegree)
       :OrthogonalPolynomails(_highestdegree)
     {
-      interval[0] = mpf_class(0);
-      interval[1] = mpf_class(INT64_MAX);
+      interval[0] = mpf_class(0,precision);
+      interval[1] = mpf_class(infinity,precision);
       initialize(); 
     };
     ~LaguerrePolys() = default;
     // degree == n,a_{n}*P_{n+1} = (b_{n}+c_{n}*x)*P_{n}-d_{n}P_{n-1}
     virtual vector<mpf_class> coefficientsOfRecurrence(mpz_class degree)
     {
-      mpf_class a_n(degree+1);
-      mpf_class b_n(2*degree+1);
-      mpf_class c_n(-1);
-      mpf_class d_n(degree);
+      mpf_class a_n(degree+1,precision);
+      mpf_class b_n(2*degree+1,precision);
+      mpf_class c_n(-1,precision);
+      mpf_class d_n(degree,precision);
       vector<mpf_class> coefficients = {a_n,b_n,c_n,d_n};
       return coefficients;
     };
     virtual vector<polynomial> coefficientsOfODE(mpz_class degree)
     {
-      vector<mpf_class> p_coeff = {0,1};
+      vector<mpf_class> p_coeff = {mpf_class(0),mpf_class(1)};
       mpz_class p_degree{1};
       polynomial p(p_coeff,p_degree);
-      vector<mpf_class> q_coeff = {1,-1};
+      vector<mpf_class> q_coeff = {mpf_class(1,precision),mpf_class(-1,precision)};
       mpz_class q_degree{1};
       polynomial q(q_coeff,q_degree);
-      vector<mpf_class> r_coeff = {degree};
+      vector<mpf_class> r_coeff = {mpf_class(degree,precision)};
       mpz_class r_degree{0};
       polynomial r(r_coeff,r_degree);
       vector<polynomial> coefficients = {p,q,r};
@@ -243,7 +241,7 @@ public:
     virtual mpf_class weightfunction(mpf_class x)
     {
       double res = exp(-x.get_d());
-      return mpf_class(res);
+      return mpf_class(res,precision);
     };
   private:
     //compute polynomial and derivate under highest_degree
@@ -254,14 +252,14 @@ public:
       derivate_polynomials.resize(psize);
       //p0 = 1
       mpz_class degree_p0(0);
-      vector<mpf_class> coeff_p0 = {1};
+      vector<mpf_class> coeff_p0 = {mpf_class(1,precision)};
       polynomial p0(coeff_p0,degree_p0);
       polynomials.at(0) = p0;
       polynomial p0_d = derivate(p0);
       derivate_polynomials.at(0) = p0_d;
       //p1 = x
       mpz_class degree_p1(1);
-      vector<mpf_class> coeff_p1 = {1,-1};
+      vector<mpf_class> coeff_p1 = {mpf_class(1,precision),mpf_class(-1,precision)};
       polynomial p1(coeff_p1,degree_p1);
       polynomials.at(1) = p1;
       polynomial p1_d = derivate(p1);

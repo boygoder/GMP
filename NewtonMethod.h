@@ -2,20 +2,19 @@
 #define __NEWTONMETHOD__
 
 #include "polynomial.h"
-#include <gmp.h>
 #include <vector>
 #include <iomanip>
 class NewtonMethod
 {
   private:
-    mpf_class start_x;
+    mpf_class start_x{0,precision};
     //for normal Newton
     polynomial u;
     polynomial derivate_u;
 
     // for Taylor series method
-    mpf_class start_ux;
-    mpf_class start_dux;
+    mpf_class start_ux{0,precision};
+    mpf_class start_dux{0,precision};
     vector<polynomial> coeff_ODE;
     vector<polynomial> d_coeff_ODE;
     vector<polynomial> d2_coeff_ODE;
@@ -85,11 +84,11 @@ mpf_class NewtonMethod::compute_root_with_taylor(mpz_class taylor_order=30,mpz_c
   cout << "eps is:\n";
   cout << fixed << setprecision(80) << eps  << endl;
   unsigned int acc = accuracy.get_ui();
-  mpf_class current_x(start_x,2*acc);
-  mpf_class current_ux(start_ux,2*acc);
-  mpf_class current_dux(start_dux,2*acc);
-  mpf_class next_x(0,2*acc);
-  mpf_class h(0,2*acc);
+  mpf_class current_x(start_x,precision);
+  mpf_class current_ux(start_ux,precision);
+  mpf_class current_dux(start_dux,precision);
+  mpf_class next_x(0,precision);
+  mpf_class h(0,precision);
   do {
     next_x = current_x - current_ux / current_dux;
     //compute u(x) and du(x) via taylor expansion.
@@ -98,6 +97,8 @@ mpf_class NewtonMethod::compute_root_with_taylor(mpz_class taylor_order=30,mpz_c
     current_ux = next_value.at(0);
     current_dux = next_value.at(1);
     current_x = next_x;
+    cout << "u(current_x) is:\n";
+    cout << abs(u(current_x)) << endl;
   } while(abs(u(current_x)) > eps); 
   //while(abs(current_ux) > eps);
 
@@ -116,16 +117,19 @@ mpf_class NewtonMethod::compute_root(mpz_class accuracy=16)
   cout << "eps is:\n";
   cout << fixed << setprecision(80) << eps << endl;
   unsigned int acc = accuracy.get_ui();
-  mpf_class current_x(start_x,2*acc);
-  mpf_class current_ux(u(current_x),2*acc);
-  mpf_class current_dux(derivate_u(current_x),2*acc);
-  mpf_class next_x(0,2*acc);
+  mpf_class current_x(start_x,precision);
+  mpf_class current_ux(u(current_x),precision);
+  mpf_class current_dux(derivate_u(current_x),precision);
+  mpf_class next_x(0,precision);
 
   do {
     next_x = current_x - current_ux / current_dux;
     current_x = next_x;
     current_ux = u(current_x);
     current_dux = derivate_u(current_x);
+
+  cout << "current_ux is:\n";
+  cout << abs(current_ux) << endl;
   } while( abs(current_ux) > eps);
 
   cout << "current_ux is:\n";
@@ -137,11 +141,11 @@ mpf_class NewtonMethod::compute_eps(mpz_class accuracy)
 {
   unsigned int acc = accuracy.get_ui();
   mpf_t eps_t,base_t;
-  mpf_init2(eps_t,2*acc);
-  mpf_init2(base_t,2*acc);
+  mpf_init2(eps_t,precision);
+  mpf_init2(base_t,precision);
   mpf_init_set_d(base_t,0.1);
   mpf_pow_ui(eps_t,base_t,acc);
-  mpf_class eps(eps_t,2*acc);
+  mpf_class eps(eps_t,precision);
   mpf_clear(eps_t);
   mpf_clear(base_t);
   return eps;
@@ -150,7 +154,7 @@ mpf_class NewtonMethod::compute_eps(mpz_class accuracy)
 vector<mpf_class> NewtonMethod::compute_taylor_value(mpf_class current_x, mpf_class next_x, vector<mpf_class> current_value,mpz_class taylor_order, unsigned int accuracy)
 {
 
-  vector<mpf_class> current_ukx(taylor_order.get_ui()+1,mpf_class(0,accuracy));
+  vector<mpf_class> current_ukx(taylor_order.get_ui()+1,mpf_class(0,precision));
   copy(cbegin(current_value),cend(current_value),begin(current_ukx));
 
 
@@ -166,7 +170,7 @@ vector<mpf_class> NewtonMethod::compute_taylor_value(mpf_class current_x, mpf_cl
   for (int k = 0; k < current_ukx.size()-2; ++k)
   {
     //compute u(k+2)(x)
-    mpf_class u_k2_x(0,2*accuracy);
+    mpf_class u_k2_x(0,precision);
     mpf_class coe1 = k*p1x + qx;
     if (coe1 != 0) {
       u_k2_x = u_k2_x - coe1*current_ukx.at(k+1);
@@ -188,16 +192,16 @@ vector<mpf_class> NewtonMethod::compute_taylor_value(mpf_class current_x, mpf_cl
     current_ukx.at(k+2) = u_k2_x/px;
   }
 
-  mpf_class next_ux(0,2*accuracy);
-  mpf_class next_dux(0,2*accuracy);
-  mpz_class factorial = 1;
-  mpf_class hk = 1;
-  mpf_class h(next_x - current_x,2*accuracy);
+  mpf_class next_ux(0,precision);
+  mpf_class next_dux(0,precision);
+  mpf_class factorial(1,precision);
+  mpf_class hk(1,precision);
+  mpf_class h(next_x - current_x,precision);
   for(int i = 0; i < taylor_order.get_ui(); ++i)
   {
     next_ux = next_ux + (current_ukx.at(i)/factorial)*hk;
     next_dux = next_dux + (current_ukx.at(i+1)/factorial)*hk;
-    factorial = factorial*(i+1);
+    factorial = factorial*mpf_class(i+1,precision);
     hk = hk*h;
   }
   next_ux = next_ux + (current_ukx.back()/factorial)*hk;
