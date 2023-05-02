@@ -12,10 +12,13 @@ using namespace std;
 mpf_class mpf_class_pow_ui(mpf_class base,unsigned int exception)
 {
   mpf_t base_t,result_t;
-  mpf_init_set(base_t,base.get_mpf_t());
-  mpf_init(result_t);
+  mpf_init2(base_t,base.get_prec());
+  mpf_set(base_t,base.get_mpf_t());
+  mpf_init2(result_t,base.get_prec());
   mpf_pow_ui(result_t,base_t,exception);
   mpf_class result(result_t,base.get_prec());
+  mpf_clear(base_t);
+  mpf_clear(result_t);
   return result;
 };
 
@@ -158,14 +161,14 @@ public:
 	{
 		mpz_class a1 = a.degree;
 		vector<mpf_class> a2 = a.coeff;
-		mpf_class c = 0;
+		mpf_class c(0,x.get_prec());
 		for (int i = 0; i <= a1.get_ui(); i++)
 			c = c + a2[i] * mpf_class_pow_ui(x, i);
 		return c;
 	}
   mpf_class operator()(mpf_class x)
   {
-		mpf_class c = 0;
+		mpf_class c(0,x.get_prec());
 		for (int i = 0; i <= degree.get_ui(); i++)
 			c = c + coeff[i] * mpf_class_pow_ui(x, i);
 		return c; 

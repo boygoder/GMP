@@ -58,7 +58,7 @@ PruferTransformer::PruferTransformer(polynomial& u, vector<polynomial>& coeff_OD
     }
     else if (abs(px) < eps) {
       part1 = INT64_MAX;
-      denominator = INT64_MAX;
+      // denominator = INT64_MAX;
     }
     else {
       part1 = sqrt(r(x)/p(x));
@@ -70,21 +70,21 @@ PruferTransformer::PruferTransformer(polynomial& u, vector<polynomial>& coeff_OD
     }
     else if (abs(part3) < eps) {
       part4 = INT64_MAX;
-      denominator = INT64_MAX;
+      // denominator = INT64_MAX;
     }
     else {
       part4 = part2/part3;
     }
-
-    if(denominator == 0)
-    {
+//
+    // if(denominator == 0)
+    // {
       denominator = part1 + part4;
-    }
+    // }
     mpf_class res;
     if (abs(denominator) < eps) {
       res = -INT64_MAX;
     }
-    else if (denominator == INT64_MAX) {
+    else if (denominator >= INT64_MAX) {
       res = 0;
     }
     else {
