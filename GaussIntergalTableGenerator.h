@@ -75,8 +75,9 @@ GaussianPoint1D GaussIntegralTableGenerator::compute_gaussian_table(mpz_class sp
   }
   //TODO:计算积分权重
   vector<mpf_class> half_weight(x_num+1,mpf_class(0,precision));
-  vector<mpf_class> weight(point_num,mpf_class(0,precision));
-  
+  half_weight = ortho_polys->getQuadratureWeight(spec_order,half_gauss_point);
+
+  vector<mpf_class> weight(point_num,mpf_class(0,precision)); 
   vector<mpf_class> gauss_point(point_num,mpf_class(0,precision));
   // cout << "copy half_gauss_point to gauss point:\n";
   if (is_odd !=0) {
@@ -86,6 +87,8 @@ GaussianPoint1D GaussIntegralTableGenerator::compute_gaussian_table(mpz_class sp
         [](mpf_class i) {
           return mpf_class(-1.0*i,precision); 
         });
+    reverse_copy(half_weight.begin()+1, half_weight.end(),weight.begin());
+    copy(half_weight.begin(),half_weight.end(),weight.begin() + x_num);
   } 
   else {
     reverse_copy(half_gauss_point.begin(), half_gauss_point.end(),gauss_point.begin());
@@ -94,7 +97,8 @@ GaussianPoint1D GaussIntegralTableGenerator::compute_gaussian_table(mpz_class sp
         [](mpf_class i) { 
           return mpf_class(-1.0*i,precision); 
         });
-
+    reverse_copy(half_weight.begin(), half_weight.end(),weight.begin());
+    copy(half_weight.begin(),half_weight.end(),weight.begin() + x_num+1);
   }
   
   GaussianPoint1D gauss(point_num,gauss_point,weight);

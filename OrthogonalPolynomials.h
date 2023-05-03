@@ -54,6 +54,17 @@ class OrthogonalPolynomails
         cout << "its highest_degree is " << highest_degree << endl;
       }
     };
+    virtual vector<mpf_class> getQuadratureWeight(mpz_class degree, vector<mpf_class> roots)
+    {
+      int len = roots.size();
+      vector<mpf_class> weights(len,mpf_class(0,precision));
+      for (int i = 0; i < len; ++i) {
+        mpf_class root = roots.at(i);
+        weights.at(i) = getQuadratureWeight(degree,root);
+      }
+      return weights;
+    };
+    virtual mpf_class getQuadratureWeight(mpz_class degree, mpf_class root) = 0;
   protected:
     virtual void initialize() = 0;
 };
@@ -103,6 +114,15 @@ class LegendrePolys: public OrthogonalPolynomails
     virtual mpf_class weightfunction(mpf_class x)
     {
       return mpf_class{1,precision};
+    };
+    virtual mpf_class getQuadratureWeight(mpz_class degree, mpf_class root)
+    {
+      polynomial dp = derivate_polynomials.at(degree.get_ui());
+      mpf_class weight(0,precision);
+      mpf_class dpx = dp(root); 
+      mpf_class denominator = (mpf_class(1,precision) - root*root)*dpx*dpx;
+      weight = mpf_class(2,precision)/denominator;
+      return weight;
     };
   private:
     //compute polynomial and derivate under highest_degree
@@ -186,6 +206,12 @@ class HermitePolys: public OrthogonalPolynomails
       double res = exp(exception.get_d());
       return mpf_class(res,precision);
     };
+    virtual mpf_class getQuadratureWeight(mpz_class degree, mpf_class root)
+    {
+      mpf_class weight(0,precision);
+      //TODO: write code
+      return weight;
+    }
   private:
     //compute polynomial and derivate under highest_degree
     void initialize()
@@ -268,6 +294,12 @@ class LaguerrePolys: public OrthogonalPolynomails
       double res = exp(-x.get_d());
       return mpf_class(res,precision);
     };
+    virtual mpf_class getQuadratureWeight(mpz_class degree, mpf_class root)
+    {
+      mpf_class weight(0,precision);
+      //TODO: write code
+      return weight;
+    }
   private:
     //compute polynomial and derivate under highest_degree
     void initialize()

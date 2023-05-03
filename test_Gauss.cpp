@@ -59,8 +59,9 @@ void test_transform()
 
 void test_Gauss_Legendre_3()
 {
+  cout << "test gauss for legendre 3:\n";
   mpz_class highest_prec = 5;
-  OrthogonalPolynomails* Pn = new LegendrePolys(3);
+  OrthogonalPolynomails* Pn = new LegendrePolys();
   GaussIntegralTableGenerator gtable(highest_prec,Pn);
   vector<GaussianPoint1D> gausstable = gtable.compute_gaussian_table();
   for (auto gauss : gausstable) {
@@ -71,21 +72,57 @@ void test_Gauss_Legendre_3()
 
 void test_Gauss_Legendre_4()
 {
+  cout << "test gauss for legendre 4:\n";
+  string dirpaths = "GaussPntDoc/Interval";
   mpz_class highest_prec = 7;
   // should call set_highest_degree
-  OrthogonalPolynomails* Pn = new LegendrePolys(2);
+  OrthogonalPolynomails* Pn = new LegendrePolys();
   GaussIntegralTableGenerator gtable(highest_prec,Pn);
   vector<GaussianPoint1D> gausstable = gtable.compute_gaussian_table();
   for (auto gauss : gausstable)
   {
     cout << gauss;
+    writeGaussianInfo(dirpaths, gauss);
   }
+  cout << "四阶积分表完毕\n";
+}
+
+void test_Legendre_100()
+{
+  cout << "test gauss for legendre 51:\n";
+  string dirpaths = "GaussPntDoc/Interval";
+  mpz_class highest_prec = 80;
+  // should call set_highest_degree
+  OrthogonalPolynomails* Pn = new LegendrePolys();
+  GaussIntegralTableGenerator gtable(highest_prec,Pn);
+  //vector<GaussianPoint1D> gausstable = gtable.compute_gaussian_table();
+  for (int i = 1; i <= 41; ++i)
+  {
+    GaussianPoint1D gauss = gtable.compute_gaussian_table(i);
+    cout << gauss;
+    writeGaussianInfo(dirpaths, gauss);
+  }
+  GaussianPoint1D gauss  = gtable.compute_gaussian_table(41);
+  vector<mpf_class> coe(80,mpf_class(0,precision));
+  coe.at(79) = 80;
+  polynomial x_79(coe,79);
+  vector<mpf_class> points = gauss.get_points();
+  vector<mpf_class> weights = gauss.get_weights();
+  mpf_class res(0,precision);
+  for(int i = 0; i < points.size(); ++i)
+  {
+    res = res + weights.at(i)*x_79(points.at(i));
+  }
+  cout << "80*x^{79} 在[-1,1]上的积分为:\n";
+  cout << fixed << setprecision(80) << res << endl;
+  assert(abs(res) < 1e-80);
 }
 int main()
 {
   //test_copy();
   //test_transform();
-  test_Gauss_Legendre_3();
+  //test_Gauss_Legendre_3();
   test_Gauss_Legendre_4();
+  test_Legendre_100();
   return 0;
 }
