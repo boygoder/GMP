@@ -75,11 +75,23 @@ void test_polynomial()
   mpf_class res3 = p1_2(x2); 
   cout << "p1+p2 res's precision is:" << res3.get_prec() << endl;
 }
+
+void test_mpz_div()
+{
+  mpz_class prec = 100;
+  mpz_class order = (prec+1)/2;
+  cout << "(100+1)/2 = "<< order << endl;
+  mpf_class order2 = (prec+1)/2.0;
+  cout << "mpf (100+1)/2 = " << order2 << endl;
+  mpf_class order3 = ceil((prec.get_d()+1)/2.0);
+  cout << "ceil get_d (100+1)/2 = "<< order3 << endl;
+}
 int main()
 {
   test_vector();
   test_prec();
   test_add();
   test_polynomial();
+  test_mpz_div();
   return 0;
 }
