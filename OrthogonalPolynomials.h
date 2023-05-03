@@ -34,6 +34,8 @@ class OrthogonalPolynomails
     virtual void set_highest_degree(mpz_class degree)
     {
       if (highest_degree < degree) {
+        polynomials.resize(degree.get_ui() + 1);
+        derivate_polynomials.resize(degree.get_ui() + 1);
         for(int i = highest_degree.get_ui()+1; i <= degree.get_ui(); ++i)
         {
           vector<mpf_class> recur = coefficientsOfRecurrence(mpz_class(i-1));
@@ -45,6 +47,7 @@ class OrthogonalPolynomails
           polynomial pi_d = tmp*derivate_polynomials.at(i-1) - (recur[3]/recur[0])*derivate_polynomials.at(i-2) + (recur[2]/recur[0])*polynomials.at(i-1);
           derivate_polynomials.at(i) = pi_d;
         }
+        highest_degree = degree;
       }
       else {
         cout << "OrthogonalPolynomials already have degree "<< degree << endl;

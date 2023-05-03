@@ -86,6 +86,21 @@ void test_mpz_div()
   mpf_class order3 = ceil((prec.get_d()+1)/2.0);
   cout << "ceil get_d (100+1)/2 = "<< order3 << endl;
 }
+
+void test_vector_construct() {
+  cout << "test vector construct:\n";
+  int len = 3;
+  cout << "vector v{int,mpf}:\n";
+  vector<mpf_class> v1{len,mpf_class(0,precision)};
+  for(auto i : v1){
+    cout << i << endl;
+  }
+  cout << "vector v(int,mpf):\n";
+  vector<mpf_class> v2(len,mpf_class(0,precision));
+  for (auto i : v2){
+    cout << i << endl;
+  }
+}
 int main()
 {
   test_vector();
@@ -93,5 +108,6 @@ int main()
   test_add();
   test_polynomial();
   test_mpz_div();
+  test_vector_construct();
   return 0;
 }

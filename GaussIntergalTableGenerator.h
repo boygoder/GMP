@@ -44,46 +44,59 @@ const vector<GaussianPoint1D>& GaussIntegralTableGenerator::compute_gaussian_tab
   table.resize(poly_order.get_ui() + 1);
   ortho_polys->set_highest_degree(poly_order);
   for (mpz_class order = 1; order <= poly_order; ++order) {
+    cout << "第"<< order << "阶正在计算，一共"<< poly_order << "阶\n";
     GaussianPoint1D gauss(compute_gaussian_table(order));
     table.at(order.get_ui()) = gauss;
+    cout << "第"<< order << "阶计算完毕"<< endl;
   }
   return table;
 };
 
 GaussianPoint1D GaussIntegralTableGenerator::compute_gaussian_table(mpz_class spec_order)
 {
-  mpz_class point_num = spec_order;
+  int point_num = spec_order.get_ui();
   mpz_class is_odd = point_num%2;
   ortho_polys->set_highest_degree(spec_order);
   // 如果是Legendre多项式
   polynomial p = ortho_polys->getPm(spec_order);
   polynomial dp = ortho_polys->getDerivatePm(spec_order);
-  mpz_class x_num = ceil(point_num.get_d()/2.0) - 1;
+  int x_num = ceil(point_num/2.0) - 1;
   // 奇偶性，先求大于等于0的一侧，然后对称。
-  vector<mpf_class> half_gauss_point{x_num+1,mpf_class(0,precision)};
+  vector<mpf_class> half_gauss_point(x_num+1,mpf_class(0,precision));
+  cout << "compute first root:\n";
   mpf_class x0 = compute_first_root(spec_order);
   half_gauss_point.at(0) = x0;
   //if n is odd, (n-1)/2 = (n+1)/2 - 1;
   //if n is even ,(n)/2;
-  for(int i = 1; i <= x_num.get_ui(); ++i) {
+  cout << "compute subsequent root:\n";
+  for(int i = 1; i <= x_num; ++i) {
     mpf_class next_x = compute_subsequent_root(spec_order,half_gauss_point.at(i-1));
     half_gauss_point.at(i) = next_x;
   }
   //TODO:计算积分权重
-  vector<mpf_class> half_weight{x_num+1,mpf_class(0,precision)};
-  vector<mpf_class> weight{point_num,mpf_class(0,precision)};
-
-  vector<mpf_class> gauss_point{point_num,mpf_class(0,precision)};
+  vector<mpf_class> half_weight(x_num+1,mpf_class(0,precision));
+  vector<mpf_class> weight(point_num,mpf_class(0,precision));
+  
+  vector<mpf_class> gauss_point(point_num,mpf_class(0,precision));
+  // cout << "copy half_gauss_point to gauss point:\n";
   if (is_odd !=0) {
-    reverse_copy(half_gauss_point.begin(), half_gauss_point.end(),gauss_point.begin());
-    copy(half_gauss_point.begin()+1,half_gauss_point.end(),gauss_point.begin() + x_num.get_ui()+1);
+    reverse_copy(half_gauss_point.begin()+1, half_gauss_point.end(),gauss_point.begin());
+    copy(half_gauss_point.begin(),half_gauss_point.end(),gauss_point.begin() + x_num);
+    std::transform(gauss_point.begin(), gauss_point.begin() + x_num, gauss_point.begin(), 
+        [](mpf_class i) {
+          return mpf_class(-1.0*i,precision); 
+        });
   } 
   else {
     reverse_copy(half_gauss_point.begin(), half_gauss_point.end(),gauss_point.begin());
-    copy(half_gauss_point.begin(),half_gauss_point.end(),gauss_point.begin() + x_num.get_ui()+1);
- 
-  }
+    copy(half_gauss_point.begin(),half_gauss_point.end(),gauss_point.begin() + x_num+1);
+    std::transform(gauss_point.begin(), gauss_point.begin() + x_num+1, gauss_point.begin(), 
+        [](mpf_class i) { 
+          return mpf_class(-1.0*i,precision); 
+        });
 
+  }
+  
   GaussianPoint1D gauss(point_num,gauss_point,weight);
   return gauss;
 };
