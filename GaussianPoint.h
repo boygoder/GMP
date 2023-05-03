@@ -1,37 +1,47 @@
-#ifndef __GAUSSIANINTERGRALTABLEGENERATOR__
-#define __GAUSSIANINTERGRALTABLEGENERATOR__
+#ifndef __GAUSSIANPOINT__
+#define __GAUSSIANPOINT__
 
+#include "gmptools.h"
+#include <vector>
+#include <iostream>
+#include <iomanip>
+#include <assert.h>
+using namespace std;
 
-#include "OrthogonalPolynomials.h"
-#include "RungeKutta.h"
-#include "NewtonMethod.h"
-#include <memory>
-class GaussIntegralTableGenerator 
+class GaussianPoint1D
 {
   private:
-    mpz_class alg_prec;
-    unique_ptr<OrthogonalPolynomails> ortho_polys;
+    vector<mpf_class> gauss_point;
+    vector<mpf_class> weight;
+    mpz_class point_num;
   public:
-    GaussIntegralTableGenerator();
-    GaussIntegralTableGenerator(mpz_class _alg_prec, OrthogonalPolynomails* _ortho_polys);
-    void compute_gaussian_table();
-  private:
-    mpf_class compute_first_root();
-    mpf_class compute_subsequent_root();
+    GaussianPoint1D() = default;
+    GaussianPoint1D(mpz_class _point_num,const vector<mpf_class>& _gauss_point, const vector<mpf_class>& _weight);
+    ~GaussianPoint1D() = default;
+    void writeGaussianInfo(string filename);
+    friend ostream& operator<<(ostream& out, const GaussianPoint1D& p); 
 };
 
-
-GaussIntegralTableGenerator::GaussIntegralTableGenerator()
+GaussianPoint1D::GaussianPoint1D(mpz_class _point_num, const vector<mpf_class>& _gauss_point, const vector<mpf_class>& _weight)
+  :point_num{_point_num},gauss_point{_gauss_point},weight{_weight}
 {
-  alg_prec = 1;
-  ortho_polys = make_unique<LegendrePolys>(2);
-}
-GaussIntegralTableGenerator::GaussIntegralTableGenerator(mpz_class _alg_prec, OrthogonalPolynomails* _ortho_polys)
+  assert(gauss_point.size() == weight.size());
+};
+ostream& operator<<(ostream& out,const GaussianPoint1D& p)
 {
-  alg_prec = max(mpz_class(1),_alg_prec);
-  unique_ptr<OrthogonalPolynomails> ptr(_ortho_polys);
-  ortho_polys = std::move(ptr);
+  out << "number of gauss points is: " << p.point_num << "\n";
+  out << "\t\t\tpoint" << "\t\t\t\t\t\t" << "weight" << "\n";
+  vector<mpf_class> gauss_point = p.gauss_point;
+  vector<mpf_class> weight = p.weight;
+  for(int i = 0; i < gauss_point.size(); ++i)
+  {
+    out << fixed << setprecision(32);
+    out << gauss_point.at(i) <<"\t";
+    out << weight.at(i) << "\n";
+  }
+  out << endl;
+  return out;
 }
 #else
-//do nothing
+// do nothing
 #endif

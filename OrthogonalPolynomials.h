@@ -31,6 +31,28 @@ class OrthogonalPolynomails
     {
       return derivate_polynomials.at(m.get_ui());
     }
+    virtual void set_highest_degree(mpz_class degree)
+    {
+      if (highest_degree < degree) {
+        for(int i = highest_degree.get_ui()+1; i <= degree.get_ui(); ++i)
+        {
+          vector<mpf_class> recur = coefficientsOfRecurrence(mpz_class(i-1));
+          mpz_class degree_tmp(1);
+          vector<mpf_class> coeff_tmp = {recur[1]/recur[0],recur[2]/recur[0]};
+          polynomial tmp(coeff_tmp,degree_tmp);
+          polynomial pi = tmp*polynomials.at(i-1) - (recur[3]/recur[0])*polynomials.at(i-2);
+          polynomials.at(i) = pi;
+          polynomial pi_d = tmp*derivate_polynomials.at(i-1) - (recur[3]/recur[0])*derivate_polynomials.at(i-2) + (recur[2]/recur[0])*polynomials.at(i-1);
+          derivate_polynomials.at(i) = pi_d;
+        }
+      }
+      else {
+        cout << "OrthogonalPolynomials already have degree "<< degree << endl;
+        cout << "its highest_degree is " << highest_degree << endl;
+      }
+    };
+  protected:
+    virtual void initialize() = 0;
 };
 
 
@@ -38,11 +60,11 @@ class LegendrePolys: public OrthogonalPolynomails
 {
   public:
     LegendrePolys():OrthogonalPolynomails()
-    {
-      interval[0] = mpf_class(-1,precision);
-      interval[1] = mpf_class(1,precision);
-      initialize();
-    };
+  {
+    interval[0] = mpf_class(-1,precision);
+    interval[1] = mpf_class(1,precision);
+    initialize();
+  };
     LegendrePolys(mpz_class _highestdegree)
       :OrthogonalPolynomails(_highestdegree)
     {
@@ -116,13 +138,13 @@ class LegendrePolys: public OrthogonalPolynomails
 
 class HermitePolys: public OrthogonalPolynomails
 {
-public:
+  public:
     HermitePolys():OrthogonalPolynomails()
-    {
-      interval[0] = mpf_class(-infinity);
-      interval[1] = mpf_class(infinity);
-      initialize();
-    };
+  {
+    interval[0] = mpf_class(-infinity);
+    interval[1] = mpf_class(infinity);
+    initialize();
+  };
     HermitePolys(mpz_class _highestdegree)
       :OrthogonalPolynomails(_highestdegree)
     {
@@ -199,13 +221,13 @@ public:
 
 class LaguerrePolys: public OrthogonalPolynomails
 {
-public:
+  public:
     LaguerrePolys():OrthogonalPolynomails()
-    {
-      interval[0] = mpf_class(0,precision);
-      interval[1] = mpf_class(infinity,precision);
-      initialize();
-    };
+  {
+    interval[0] = mpf_class(0,precision);
+    interval[1] = mpf_class(infinity,precision);
+    initialize();
+  };
     LaguerrePolys(mpz_class _highestdegree)
       :OrthogonalPolynomails(_highestdegree)
     {

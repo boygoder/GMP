@@ -2,6 +2,8 @@
 #include "OrthogonalPolynomials.h"
 #include <iomanip>
 #include "assert.h"
+#include "RungeKutta.h"
+#include "PruferTransformer.h"
 void test_Legendre2()
 {
   cout << "test NewtonMethod for Legendre polynomials without talor:\n";
@@ -64,9 +66,42 @@ void test_Legendre2_taylor()
   assert(abs(p2(root80)) < 1e-80);
 }
 
+
+void test_set_start_x()
+{
+  cout << "test Newton's method for Legendre4 with set initial condtion:\n";
+  LegendrePolys Pn(mpz_class(4));
+  polynomial p4 = Pn.getPm(4);
+  vector<polynomial> coeff_ODE = Pn.coefficientsOfODE(4);
+  PruferTransformer prufer4(p4,coeff_ODE);
+  auto dx_dtheta = prufer4.get_dx_dtheta();
+  vector<mpf_class> initial = {0,prufer4.theta_x_value(0)};
+  RungeKutta4 RK4(initial,dx_dtheta);
+  mpf_class h = -1e-3;
+  mpf_class end_x = -pi/2.0;
+  mpf_class end_y = RK4.compute(h, end_x);
+  vector<polynomial> initial_function = {p4,Pn.getDerivatePm(4)};
+  NewtonMethod n1(end_y,initial_function,coeff_ODE);
+  mpf_class root_80 = n1.compute_root_with_taylor(120,80);
+  cout << "Legendre polynomial P4's smallest root>0 is :\n";
+  cout << fixed << setprecision(80) <<root_80 <<"\n";
+  cout << "P4(root_80) = " << p4(root_80) << endl;
+  assert(abs(p4(root_80)) < 1e-80);
+
+  vector<mpf_class> initial2 = {pi/2.0,end_y};
+  RK4.set_initial_condition(initial2);
+  mpf_class end_y2 = RK4.compute(h, end_x);
+  n1.set_start_x(end_y2);
+  root_80 = n1.compute_root_with_taylor(120,80);
+  cout << "Legendre polynomial P4's second root>0 is :\n";
+  cout << fixed << setprecision(80) <<root_80 << "\n";
+  cout << "P4(root_80) = " << p4(root_80) << endl;
+  assert(abs(p4(root_80)) < 1e-80);
+}
 int main()
 {
   test_Legendre2();
   test_Legendre2_taylor();
+  test_set_start_x();
   return 0;
 };  

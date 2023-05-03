@@ -13,22 +13,17 @@ class NewtonMethod
     polynomial derivate_u;
 
     // for Taylor series method
-    mpf_class start_ux{0,precision};
-    mpf_class start_dux{0,precision};
     vector<polynomial> coeff_ODE;
     vector<polynomial> d_coeff_ODE;
     vector<polynomial> d2_coeff_ODE;
   public:
     NewtonMethod() = default;
-    //_initial_value = {u(start_x),u'(start_x)},coeff_ODE = {p,q,r}
-    NewtonMethod(mpf_class _start_x, vector<mpf_class> _initial_value, vector<polynomial> _coeff_ODE);
     NewtonMethod(mpf_class _start_x, vector<polynomial> _initial_function, vector<polynomial> _coeff_ODE);
     //_initial_function = {u,u'}
     NewtonMethod(mpf_class _start_x, vector<polynomial> _initial_function);
     mpf_class compute_root_with_taylor(mpz_class taylor_order,mpz_class accuracy);
     mpf_class compute_root(mpz_class accuracy);
     void set_start_x(mpf_class _start_x);
-    void set_start_value(vector<mpf_class> _initial_value);
     ~NewtonMethod() = default;
   private:
     mpf_class compute_eps(mpz_class accuracy);
@@ -36,19 +31,24 @@ class NewtonMethod
         vector<mpf_class> current_value,mpz_class tylor_order, unsigned int accuracy);
 };
 
-NewtonMethod::NewtonMethod(mpf_class _start_x, vector<mpf_class> _initial_value, vector<polynomial> _coeff_ODE)
-  :start_x{_start_x},coeff_ODE{_coeff_ODE}
+// NewtonMethod::NewtonMethod(mpf_class _start_x, vector<mpf_class> _initial_value, vector<polynomial> _coeff_ODE)
+//   :start_x{_start_x},coeff_ODE{_coeff_ODE}
+// {
+//   start_ux = _initial_value.at(0);
+//   start_dux = _initial_value.at(1);
+//   int s = coeff_ODE.size();
+//   d_coeff_ODE.resize(s);
+//   d2_coeff_ODE.resize(s);
+//   for(int i = 0; i < s; ++i)
+//   {
+//     d_coeff_ODE.at(i) = derivate(coeff_ODE.at(i));
+//     d2_coeff_ODE.at(i) = derivate(d_coeff_ODE.at(i));
+//   }
+// };
+
+void NewtonMethod::set_start_x(mpf_class _start_x)
 {
-  start_ux = _initial_value.at(0);
-  start_dux = _initial_value.at(1);
-  int s = coeff_ODE.size();
-  d_coeff_ODE.resize(s);
-  d2_coeff_ODE.resize(s);
-  for(int i = 0; i < s; ++i)
-  {
-    d_coeff_ODE.at(i) = derivate(coeff_ODE.at(i));
-    d2_coeff_ODE.at(i) = derivate(d_coeff_ODE.at(i));
-  }
+  start_x = _start_x;
 };
 
 NewtonMethod::NewtonMethod(mpf_class _start_x, vector<polynomial> _initial_function, vector<polynomial> _coeff_ODE)
@@ -56,8 +56,6 @@ NewtonMethod::NewtonMethod(mpf_class _start_x, vector<polynomial> _initial_funct
 {
   u = _initial_function.at(0);
   derivate_u = _initial_function.at(1);
-  start_ux = u(_start_x);
-  start_dux = derivate_u(_start_x);
   int s = coeff_ODE.size();
   d_coeff_ODE.resize(s);
   d2_coeff_ODE.resize(s);
@@ -85,8 +83,8 @@ mpf_class NewtonMethod::compute_root_with_taylor(mpz_class taylor_order=30,mpz_c
   cout << fixed << setprecision(80) << eps  << endl;
   unsigned int acc = accuracy.get_ui();
   mpf_class current_x(start_x,precision);
-  mpf_class current_ux(start_ux,precision);
-  mpf_class current_dux(start_dux,precision);
+  mpf_class current_ux = u(current_x);
+  mpf_class current_dux = derivate_u(current_x);
   mpf_class next_x(0,precision);
   mpf_class h(0,precision);
   do {
@@ -97,8 +95,8 @@ mpf_class NewtonMethod::compute_root_with_taylor(mpz_class taylor_order=30,mpz_c
     current_ux = next_value.at(0);
     current_dux = next_value.at(1);
     current_x = next_x;
-    cout << "u(current_x) is:\n";
-    cout << abs(u(current_x)) << endl;
+    //cout << "u(current_x) is:\n";
+    //cout << abs(u(current_x)) << endl;
   } while(abs(u(current_x)) > eps); 
   //while(abs(current_ux) > eps);
 
@@ -128,15 +126,15 @@ mpf_class NewtonMethod::compute_root(mpz_class accuracy=16)
     current_ux = u(current_x);
     current_dux = derivate_u(current_x);
 
-  cout << "current_ux is:\n";
-  cout << abs(current_ux) << endl;
+    //cout << "current_ux is:\n";
+    //cout << abs(current_ux) << endl;
   } while( abs(current_ux) > eps);
 
   cout << "current_ux is:\n";
   cout << abs(current_ux) << endl;
   return current_x;
 };
- 
+
 mpf_class NewtonMethod::compute_eps(mpz_class accuracy)
 {
   unsigned int acc = accuracy.get_ui();
@@ -187,7 +185,7 @@ vector<mpf_class> NewtonMethod::compute_taylor_value(mpf_class current_x, mpf_cl
     if (coe4 != 0) {
       u_k2_x = u_k2_x - coe4*current_ukx.at(k-2);
     } 
-    
+
     //BUG:if px == 0, what???
     current_ukx.at(k+2) = u_k2_x/px;
   }
