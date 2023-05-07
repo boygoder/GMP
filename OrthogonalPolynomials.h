@@ -1,7 +1,9 @@
 #ifndef __ORTHOGONAL_POLYNOMIALS__
 #define __ORTHOGONAL_POLYNOMIALS__
+#include "gmptools.h"
 #include "polynomial.h"
 #include <functional>
+#include <gmpxx.h>
 //Family of Orthogonal Polynomials
 class OrthogonalPolynomails
 {
@@ -119,9 +121,11 @@ class LegendrePolys: public OrthogonalPolynomails
     {
       polynomial dp = derivate_polynomials.at(degree.get_ui());
       mpf_class weight(0,precision);
-      mpf_class dpx = dp(root); 
-      mpf_class denominator = (mpf_class(1,precision) - root*root)*dpx*dpx;
-      weight = mpf_class(2,precision)/denominator;
+      mpf_class dpx = dp(root);
+
+      mpf_class denominator(0,precision);
+      denominator = (1.0-mpf_class_pow_ui(root, 2))*mpf_class_pow_ui(dpx, 2);
+      weight = mpf_class(2.0,precision)/denominator;
       return weight;
     };
   private:
@@ -208,8 +212,15 @@ class HermitePolys: public OrthogonalPolynomails
     };
     virtual mpf_class getQuadratureWeight(mpz_class degree, mpf_class root)
     {
+      int order = degree.get_ui();
       mpf_class weight(0,precision);
       //TODO: write code
+      mpf_class sqrt_pi(0,precision);
+      sqrt_pi = sqrt(pi);
+      mpf_class fact = mpf_class_pow_ui(mpf_class(2.0,precision), order+1)*factorial(degree);
+      polynomial dh = derivate_polynomials.at(order);
+      mpf_class dhx = dh(root);
+      weight = (sqrt_pi*fact)/(dhx*dhx);
       return weight;
     }
   private:
@@ -298,6 +309,13 @@ class LaguerrePolys: public OrthogonalPolynomails
     {
       mpf_class weight(0,precision);
       //TODO: write code
+      int order = degree.get_ui();
+      polynomial dl = derivate_polynomials.at(order);
+      mpf_class dlx(0,precision);
+      dlx = dl(root);
+      mpf_class denominator(0,precision);
+      denominator = root*dlx*dlx;
+      weight = mpf_class(1,precision)/denominator;
       return weight;
     }
   private:

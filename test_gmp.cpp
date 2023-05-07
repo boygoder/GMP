@@ -1,8 +1,7 @@
 #include "gmptools.h"
 #include <iostream>
-#include <vector>
 #include "OrthogonalPolynomials.h"
-using namespace std;
+#include <iomanip>
 
 void test_prec()
 {
@@ -100,6 +99,16 @@ void test_vector_construct() {
   for (auto i : v2){
     cout << i << endl;
   }
+
+}
+
+void test_pi()
+{
+  cout << "now pi is :\n";
+  cout << fixed << setprecision(128) << pi << "\n";
+  cout << "new pi is :\n";
+  mpf_class new_pi = compute_pi(128);
+  cout << new_pi << endl;
 }
 int main()
 {
@@ -109,5 +118,6 @@ int main()
   test_polynomial();
   test_mpz_div();
   test_vector_construct();
+  test_pi();
   return 0;
 }

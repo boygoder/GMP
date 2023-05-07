@@ -1,5 +1,7 @@
+#include <iomanip>
 #include <vector>
 #include "GaussianPoint.h"
+#include "OrthogonalPolynomials.h"
 #include "gmptools.h"
 #include <algorithm>
 #include <iostream>
@@ -73,7 +75,7 @@ void test_Gauss_Legendre_3()
 void test_Gauss_Legendre_4()
 {
   cout << "test gauss for legendre 4:\n";
-  string dirpaths = "GaussPntDoc/Interval";
+  string dirpaths = "GaussPntDoc/Interval/Legendre";
   mpz_class highest_prec = 7;
   // should call set_highest_degree
   OrthogonalPolynomails* Pn = new LegendrePolys();
@@ -87,42 +89,125 @@ void test_Gauss_Legendre_4()
   cout << "四阶积分表完毕\n";
 }
 
-void test_Legendre_100()
+void test_Legendre_80()
 {
   cout << "test gauss for legendre 51:\n";
-  string dirpaths = "GaussPntDoc/Interval";
+  string dirpaths = "GaussPntDoc/Interval/Legendre";
   mpz_class highest_prec = 80;
   // should call set_highest_degree
   OrthogonalPolynomails* Pn = new LegendrePolys();
   GaussIntegralTableGenerator gtable(highest_prec,Pn);
   //vector<GaussianPoint1D> gausstable = gtable.compute_gaussian_table();
-  for (int i = 1; i <= 41; ++i)
-  {
-    GaussianPoint1D gauss = gtable.compute_gaussian_table(i);
-    cout << gauss;
-    writeGaussianInfo(dirpaths, gauss);
-  }
+  // for (int i = 1; i <= 41; ++i)
+  // {
+  //   GaussianPoint1D gauss = gtable.compute_gaussian_table(i);
+  //   cout << gauss;
+  //   writeGaussianInfo(dirpaths, gauss);
+  // }
   GaussianPoint1D gauss  = gtable.compute_gaussian_table(41);
-  vector<mpf_class> coe(80,mpf_class(0,precision));
-  coe.at(79) = 80;
-  polynomial x_79(coe,79);
+  vector<mpf_class> coe(81,mpf_class(0,precision));
+  coe.at(80) = 1;
+  polynomial x_80(coe,80);
   vector<mpf_class> points = gauss.get_points();
   vector<mpf_class> weights = gauss.get_weights();
   mpf_class res(0,precision);
   for(int i = 0; i < points.size(); ++i)
   {
-    res = res + weights.at(i)*x_79(points.at(i));
+    res = res + weights.at(i)*x_80(points.at(i));
   }
-  cout << "80*x^{79} 在[-1,1]上的积分为:\n";
+  cout << "x^{80} 在[-1,1]上的积分为:\n";
   cout << fixed << setprecision(80) << res << endl;
-  assert(abs(res) < 1e-80);
+  mpf_class theory = mpf_class(2.0,precision)/mpf_class(81,precision);
+  cout << "理论积分为:\n";
+  cout << fixed << setprecision(80) << theory << endl;
+  cout << fixed << setprecision(80) << res-theory << endl;  
+  assert(abs(res-theory) < 1e-80);
 }
+
+void test_Legendre_100()
+{
+  cout << "test gauss for legendre 51:\n";
+  string dirpaths = "GaussPntDoc/Interval/Legendre";
+  mpz_class highest_prec = 100;
+  // should call set_highest_degree
+  OrthogonalPolynomails* Pn = new LegendrePolys();
+  GaussIntegralTableGenerator gtable(highest_prec,Pn);
+  // vector<GaussianPoint1D> gausstable = gtable.compute_gaussian_table();
+  for (int i = 1; i <= 51; ++i)
+  {
+    cout << "compute order " << i << endl;
+    GaussianPoint1D gauss = gtable.compute_gaussian_table(i);
+    cout << gauss;
+    writeGaussianInfo(dirpaths, gauss);
+  }
+
+}
+
+void test_Legendre_200()
+{
+  cout << "test gauss for Legendre 100:\n";
+  string dirpaths = "GaussPntDoc/Interval/Legendre";
+  mpz_class highest_prec = 199;
+  // should call set_highest_degree
+  OrthogonalPolynomails* Pn = new LegendrePolys();
+  GaussIntegralTableGenerator gtable(highest_prec,Pn);
+  // vector<GaussianPoint1D> gausstable = gtable.compute_gaussian_table();
+  for (int i = 100; i <= 100; ++i)
+  {
+    cout << "compute order " << i << endl;
+    GaussianPoint1D gauss = gtable.compute_gaussian_table(i);
+    cout << gauss;
+    writeGaussianInfo(dirpaths, gauss);
+  }
+}
+
+void test_Hermite_200()
+{
+  cout << "test gauss for Hermite 100:\n";
+  string dirpaths = "GaussPntDoc/Interval/Hermite";
+  mpz_class highest_prec = 11;
+  // should call set_highest_degree
+  OrthogonalPolynomails* Pn = new HermitePolys();
+  GaussIntegralTableGenerator gtable(highest_prec,Pn);
+  gtable.set_taylor_items(60);
+  gtable.set_newton_eps(16);
+  // vector<GaussianPoint1D> gausstable = gtable.compute_gaussian_table();
+  for (int i = 1; i <= 6; ++i)
+  {
+    cout << "compute order " << i << endl;
+    GaussianPoint1D gauss = gtable.compute_gaussian_table(i);
+    cout << gauss;
+    writeGaussianInfo(dirpaths, gauss);
+  }
+}
+
+// void test_Lagueree_200()
+// {
+//   cout << "test gauss for Lagueree 100:\n";
+//   string dirpaths = "GaussPntDoc/Interval/Lagueree";
+//   mpz_class highest_prec = 199;
+//   // should call set_highest_degree
+//   OrthogonalPolynomails* Pn = new LaguereePolys();
+//   GaussIntegralTableGenerator gtable(highest_prec,Pn);
+//   // vector<GaussianPoint1D> gausstable = gtable.compute_gaussian_table();
+//   for (int i = 100; i <= 100; ++i)
+//   {
+//     cout << "compute order " << i << endl;
+//     GaussianPoint1D gauss = gtable.compute_gaussian_table(i);
+//     cout << gauss;
+//     writeGaussianInfo(dirpaths, gauss);
+//   }
+// }
+
 int main()
 {
   //test_copy();
   //test_transform();
   //test_Gauss_Legendre_3();
-  test_Gauss_Legendre_4();
-  test_Legendre_100();
+  //test_Gauss_Legendre_4();
+  //test_Legendre_80();
+  //test_Legendre_100();
+  //test_Legendre_200();
+  test_Hermite_200();
   return 0;
 }

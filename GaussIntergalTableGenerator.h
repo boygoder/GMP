@@ -15,11 +15,15 @@ class GaussIntegralTableGenerator
     mpz_class highest_prec;
     unique_ptr<OrthogonalPolynomails> ortho_polys;
     vector<GaussianPoint1D> table;
+    mpz_class taylor_items = 120;
+    mpz_class newton_eps = 80;
   public:
     GaussIntegralTableGenerator();
     GaussIntegralTableGenerator(mpz_class _hightest_prec, OrthogonalPolynomails* _ortho_polys);
     const vector<GaussianPoint1D>& compute_gaussian_table();
     GaussianPoint1D compute_gaussian_table(mpz_class spec_prec);
+    void set_taylor_items(mpz_class _taylor_items);
+    void set_newton_eps(mpz_class _newton_eps);
   private:
     mpf_class compute_first_root(mpz_class poly_order);
     mpf_class compute_subsequent_root(mpz_class poly_order,mpf_class current_x);
@@ -37,7 +41,15 @@ GaussIntegralTableGenerator::GaussIntegralTableGenerator(mpz_class _highest_prec
   unique_ptr<OrthogonalPolynomails> ptr(_ortho_polys);
   ortho_polys = std::move(ptr);
 }
+void GaussIntegralTableGenerator::set_taylor_items(mpz_class _taylor_items)
+{
+  taylor_items = _taylor_items;
+};
 
+void GaussIntegralTableGenerator::set_newton_eps(mpz_class _newton_eps)
+{
+  newton_eps = _newton_eps;
+};
 const vector<GaussianPoint1D>& GaussIntegralTableGenerator::compute_gaussian_table()
 {
   mpz_class poly_order = ceil((highest_prec.get_d()+1)/2.0);
@@ -129,7 +141,7 @@ mpf_class GaussIntegralTableGenerator::compute_first_root(mpz_class poly_order)
     vector<polynomial> initial_function = {p,dp};
     // improve the precision of x0 via Newton's method
     NewtonMethod newton(end_y,initial_function,coeff_ODE);
-    mpf_class first_root = newton.compute_root_with_taylor(120,80); 
+    mpf_class first_root = newton.compute_root_with_taylor(taylor_items,newton_eps); 
     return first_root;
   }
 };
@@ -149,7 +161,7 @@ mpf_class GaussIntegralTableGenerator::compute_subsequent_root(mpz_class poly_or
     vector<polynomial> initial_function = {p,ortho_polys->getDerivatePm(poly_order)};
     // improve the precision of x0 via Newton's method
     NewtonMethod newton(end_y,initial_function,coeff_ODE);
-    mpf_class next_root = newton.compute_root_with_taylor(120,80);
+    mpf_class next_root = newton.compute_root_with_taylor(taylor_items,newton_eps);
     return next_root;
 };
 #else

@@ -152,7 +152,35 @@ public:
 		mpf_class c(0,precision);
 		for (int i = 0; i <= degree.get_ui(); i++)
 			c = c + coeff[i] * mpf_class_pow_ui(x, i);
-		return c; 
+		return c;
+    //BUG: 秦九韶算法，存在精度问题
+  //   vector<mpf_class> a = coeff;
+  //   //reverse(a.begin(),a.end());
+  //   vector<mpf_class> b(a.size(),mpf_class(0,precision));
+  //   unsigned int order = degree.get_ui();
+  //   b.at(order) = a.at(order);
+		// for (int i = 1; i <= order; i++)
+		// 	b.at(order-i) = b.at(order-(i-1))*x + a.at(order-i);
+		// return b.at(0); 
+  }
+ mpf_class derivateValue(mpf_class x)
+  {
+    //TODO:秦九韶算法
+    if (degree == 0) {
+     return 0;
+    }
+    vector<mpf_class> a = coeff;
+		vector<mpf_class> b(a.size(),mpf_class(0,precision));
+    unsigned int order = degree.get_ui();
+    b.at(order) = a.at(order);
+		for (int i = 1; i <= order; i++)
+			b.at(order-i) = b.at(order-(i-1))*x + a.at(order-i);
+    vector<mpf_class> c(b.size()-1,mpf_class(0,precision));
+    c.at(order-1) = b.at(order);
+    for (int i = 1; i <= order-1; i++) {
+      c.at(order-1-i) = c.at(order-i)*x + b.at(order-i);
+    }
+    return c.at(0);
   }
 	friend polynomial derivate(polynomial a)
 	{

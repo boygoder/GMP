@@ -2,6 +2,7 @@
 #include <gmpxx.h>
 #include <iostream>
 #include <assert.h>
+#include <iomanip>
 void test_default_construct()
 {
   cout <<"test default constructor of polynomial:\n";
@@ -101,16 +102,16 @@ void test_point_value()
   cout <<"p1(-1) = "<< pointValue(mpf_class(-1),p1) <<"\n";
   cout <<"p1(-2) = "<< pointValue(mpf_class(-2),p1) <<"\n";
   cout <<"p1(0) = "<< pointValue(mpf_class(0),p1) <<"\n";
-  assert(pointValue(mpf_class(-1), p1) == 0);
-  assert(pointValue(mpf_class(-2), p1) == 1);
-  assert(pointValue(mpf_class(0), p1) == 1);
+  assert(pointValue(mpf_class(-1), p1) == p1(-1));
+  assert(pointValue(mpf_class(-2), p1) == p1(-2));
+  assert(pointValue(mpf_class(0), p1) == p1(0));
 }
 
 void test_derivate()
 {
   cout << "test derivate of polynomial:\n";
   mpz_class degree_p1(2);
-  vector<mpf_class> coeff_p1 = {1,2,1};
+  vector<mpf_class> coeff_p1 = {3,2,1};
   polynomial p1(coeff_p1,degree_p1); 
   polynomial p1_d = derivate(p1);
   vector<mpf_class> coeff_p1d = {2,2};
@@ -148,6 +149,19 @@ void test_brackets_operator()
   assert(p1(1) == 4);
   assert(p1(2) == 9);
 }
+void test_new_pointvalue()
+{
+  cout << "test new pointValue:\n";
+  cout << fixed << setprecision(80);
+  mpz_class degree_p1(4);
+  vector<mpf_class> coeff_p1 = {-4,3,-3,0,2};
+  polynomial p1(coeff_p1,degree_p1);
+  cout << "p1(-2) = " << p1(-2) << "\n";
+  assert(p1(-2) == 10);
+  cout << "p1'(-2) = " << p1.derivateValue(-2) << "\n";
+  assert(p1.derivateValue(-2) == -49);
+  cout << endl;
+}
 int main()
 {
   test_default_construct();
@@ -159,6 +173,7 @@ int main()
   test_multi_poly();
   test_point_value();
   test_derivate();
+  test_new_pointvalue();
   return 0;
 }
 

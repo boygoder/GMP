@@ -27,24 +27,11 @@ class NewtonMethod
     ~NewtonMethod() = default;
   private:
     mpf_class compute_eps(mpz_class accuracy);
-    vector<mpf_class> compute_taylor_value(mpf_class current_x, mpf_class next_x, 
-        vector<mpf_class> current_value,mpz_class tylor_order, unsigned int accuracy);
+    vector<mpf_class> compute_derivates(mpf_class current_x,mpz_class order);
+    vector<mpf_class> compute_taylor_value(mpf_class current_x, mpf_class next_x,vector<mpf_class>& current_ukx,mpz_class tylor_order);
 };
 
-// NewtonMethod::NewtonMethod(mpf_class _start_x, vector<mpf_class> _initial_value, vector<polynomial> _coeff_ODE)
-//   :start_x{_start_x},coeff_ODE{_coeff_ODE}
-// {
-//   start_ux = _initial_value.at(0);
-//   start_dux = _initial_value.at(1);
-//   int s = coeff_ODE.size();
-//   d_coeff_ODE.resize(s);
-//   d2_coeff_ODE.resize(s);
-//   for(int i = 0; i < s; ++i)
-//   {
-//     d_coeff_ODE.at(i) = derivate(coeff_ODE.at(i));
-//     d2_coeff_ODE.at(i) = derivate(d_coeff_ODE.at(i));
-//   }
-// };
+
 
 void NewtonMethod::set_start_x(mpf_class _start_x)
 {
@@ -85,13 +72,16 @@ mpf_class NewtonMethod::compute_root_with_taylor(mpz_class taylor_order=30,mpz_c
   mpf_class current_x(start_x,precision);
   mpf_class current_ux = u(current_x);
   mpf_class current_dux = derivate_u(current_x);
+  vector<mpf_class> start_ukx = compute_derivates(current_x, taylor_order);
   mpf_class next_x(0,precision);
   mpf_class h(0,precision);
   do {
     next_x = current_x - current_ux / current_dux;
     //compute u(x) and du(x) via taylor expansion.
-    vector<mpf_class> current_value = {current_ux,current_dux};
-    vector<mpf_class> next_value = compute_taylor_value(current_x, next_x, current_value, taylor_order, acc);
+    // vector<mpf_class> current_value = {current_ux,current_dux};
+    // vector<mpf_class> next_value = compute_taylor_value(start_x, next_x, start_value, taylor_order, acc);
+    //change current_x to start_x
+    vector<mpf_class> next_value = compute_taylor_value(start_x, next_x,start_ukx,taylor_order);
     current_ux = next_value.at(0);
     current_dux = next_value.at(1);
     current_x = next_x;
@@ -141,20 +131,19 @@ mpf_class NewtonMethod::compute_eps(mpz_class accuracy)
   mpf_t eps_t,base_t;
   mpf_init2(eps_t,precision);
   mpf_init2(base_t,precision);
-  mpf_init_set_d(base_t,0.1);
+  mpf_class base(0.1,precision);
+  mpf_set(base_t,base.get_mpf_t());
   mpf_pow_ui(eps_t,base_t,acc);
   mpf_class eps(eps_t,precision);
   mpf_clear(eps_t);
   mpf_clear(base_t);
   return eps;
 };
-
-vector<mpf_class> NewtonMethod::compute_taylor_value(mpf_class current_x, mpf_class next_x, vector<mpf_class> current_value,mpz_class taylor_order, unsigned int accuracy)
+vector<mpf_class> NewtonMethod::compute_derivates(mpf_class current_x,mpz_class order)
 {
-
-  vector<mpf_class> current_ukx(taylor_order.get_ui()+1,mpf_class(0,precision));
-  copy(cbegin(current_value),cend(current_value),begin(current_ukx));
-
+  vector<mpf_class> current_ukx(order.get_ui()+1,mpf_class(0,precision));
+  current_ukx.at(0) = u(current_x);
+  current_ukx.at(1) = derivate_u(current_x);
 
   mpf_class px = coeff_ODE.at(0)(current_x);
   mpf_class qx = coeff_ODE.at(1)(current_x);
@@ -189,7 +178,13 @@ vector<mpf_class> NewtonMethod::compute_taylor_value(mpf_class current_x, mpf_cl
     //BUG:if px == 0, what???
     current_ukx.at(k+2) = u_k2_x/px;
   }
+  return current_ukx;
 
+};
+vector<mpf_class> NewtonMethod::compute_taylor_value(mpf_class current_x, mpf_class next_x,vector<mpf_class>& start_ukx,mpz_class taylor_order)
+{
+  //vector<mpf_class> current_ukx  = compute_derivates(current_x,taylor_order);
+  vector<mpf_class> current_ukx = start_ukx;
   mpf_class next_ux(0,precision);
   mpf_class next_dux(0,precision);
   mpf_class factorial(1,precision);
