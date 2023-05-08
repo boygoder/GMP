@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <iostream>
 #include "GaussIntergalTableGenerator.h"
+#include "polynomial.h"
 using namespace std;
 void test_copy()
 {
@@ -244,7 +245,7 @@ void test_Lagueree_integral()
   for(int i = 0; i < points.size(); ++i)
   {
     mpf_class ux(0,2*precision);
-    ux = x_100(points.at(i));
+    ux = pointValue(points.at(i),x_100);
     mpf_class wx(0,2*precision);
     wx = weights.at(i);
     res = res + wx*ux;
