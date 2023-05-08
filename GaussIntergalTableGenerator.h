@@ -28,6 +28,7 @@ class GaussIntegralTableGenerator
     mpf_class compute_first_root_symmetric(mpz_class poly_order);
     mpf_class compute_first_root_unsymmetric(mpz_class poly_order);
     mpf_class compute_subsequent_root(mpz_class poly_order,mpf_class current_x);
+    mpf_class compute_subsequent_root_unsymmetric(mpz_class poly_order,mpf_class current_x);
     GaussianPoint1D compute_gaussian_symmetric(mpz_class spec_order);
     GaussianPoint1D compute_gaussian_unsymmetric(mpz_class spec_order);
 };
@@ -121,21 +122,38 @@ GaussianPoint1D GaussIntegralTableGenerator::compute_gaussian_symmetric(mpz_clas
 };
 GaussianPoint1D GaussIntegralTableGenerator::compute_gaussian_unsymmetric(mpz_class spec_order)
 {
-// 如果是Legendre多项式或Hermite多项式
+// 如果是Lagueree多项式
   int point_num = spec_order.get_ui();
   ortho_polys->set_highest_degree(spec_order);
   polynomial p = ortho_polys->getPm(spec_order);
   polynomial dp = ortho_polys->getDerivatePm(spec_order);
   vector<mpf_class> weight(point_num,mpf_class(0,precision)); 
   vector<mpf_class> gauss_point(point_num,mpf_class(0,precision));
+  //TODO:计算出所有低级精度根。
   cout << "compute first root:\n";
   mpf_class x0 = compute_first_root_unsymmetric(spec_order);
   gauss_point.at(0) = x0;
+  // cout << "first root is :" << x0 << endl;
   cout << "compute subsequent root:\n";
   for(int i = 1; i < point_num; ++i) {
-    mpf_class next_x = compute_subsequent_root(spec_order,gauss_point.at(i-1));
+    mpf_class next_x = compute_subsequent_root_unsymmetric(spec_order,gauss_point.at(i-1));
     gauss_point.at(i) = next_x;
   }
+  cout << "低精度根：\n";
+  for(auto point : gauss_point) {
+    cout << fixed << setprecision(256) << point <<"\n";
+  }
+  cout << endl;
+  //TODO:从最大根开始，使用牛顿法提高精度。
+     vector<polynomial> initial_function = {p,dp};
+    vector<polynomial> coeff_ODE = ortho_polys->coefficientsOfODE(spec_order);
+    NewtonMethod newton(0,initial_function,coeff_ODE); 
+  for (int i = point_num-1; i >= 0; --i) {
+    newton.set_start_x(gauss_point.at(i));
+    mpf_class first_root = newton.compute_root_with_taylor(taylor_items,newton_eps);
+    gauss_point.at(i) = first_root;
+  }
+
   //TODO:计算积分权重
   weight = ortho_polys->getQuadratureWeight(spec_order,gauss_point);
   
@@ -182,11 +200,11 @@ mpf_class GaussIntegralTableGenerator::compute_first_root_symmetric(mpz_class po
     mpf_class h = -1e-3;
     mpf_class end_x = -pi/2.0;
     mpf_class end_y = RK4.compute(h, end_x);
+    // improve the precision of x0 via Newton's method
     polynomial dp = ortho_polys->getDerivatePm(poly_order);
     vector<polynomial> initial_function = {p,dp};
-    // improve the precision of x0 via Newton's method
     NewtonMethod newton(end_y,initial_function,coeff_ODE);
-    mpf_class first_root = newton.compute_root_with_taylor(taylor_items,newton_eps); 
+    mpf_class first_root = newton.compute_root_with_taylor(taylor_items,newton_eps);
     return first_root;
   }
 };
@@ -196,7 +214,7 @@ mpf_class GaussIntegralTableGenerator::compute_first_root_unsymmetric(mpz_class 
     cout << "we don't know how to compute first root for this unsymmetric polynomials\n";
     exit(1);
   }
-  mpf_class inequality_value = 1.0/(2.0*poly_order+1.0);
+  mpf_class inequality_value = 1.0/(2.0*poly_order.get_ui()+1.0);
     polynomial p = ortho_polys->getPm(poly_order);
     vector<polynomial> coeff_ODE = ortho_polys->coefficientsOfODE(poly_order);
     PruferTransformer prufer(p,coeff_ODE);
@@ -207,12 +225,13 @@ mpf_class GaussIntegralTableGenerator::compute_first_root_unsymmetric(mpz_class 
     mpf_class h = -1e-3;
     mpf_class end_x = -pi/2.0;
     mpf_class end_y = RK4.compute(h, end_x);
-    polynomial dp = ortho_polys->getDerivatePm(poly_order);
-    vector<polynomial> initial_function = {p,dp};
     // improve the precision of x0 via Newton's method
-    NewtonMethod newton(end_y,initial_function,coeff_ODE);
-    mpf_class first_root = newton.compute_root(newton_eps); 
-    return first_root;
+    // polynomial dp = ortho_polys->getDerivatePm(poly_order);
+    // vector<polynomial> initial_function = {p,dp};
+    // NewtonMethod newton(end_y,initial_function,coeff_ODE);
+    // mpf_class first_root = newton.compute_root(newton_eps); 
+    mpf_class first_root = end_y;
+    return end_y;
 };
 mpf_class GaussIntegralTableGenerator::compute_subsequent_root(mpz_class poly_order,mpf_class current_x)
 {
@@ -232,6 +251,27 @@ mpf_class GaussIntegralTableGenerator::compute_subsequent_root(mpz_class poly_or
     mpf_class next_root = newton.compute_root_with_taylor(taylor_items,newton_eps);
     return next_root;
 };
+
+mpf_class GaussIntegralTableGenerator::compute_subsequent_root_unsymmetric(mpz_class poly_order,mpf_class current_x)
+{
+    polynomial p = ortho_polys->getPm(poly_order);
+    vector<polynomial> coeff_ODE = ortho_polys->coefficientsOfODE(poly_order);
+    PruferTransformer prufer(p,coeff_ODE);
+    auto dx_dtheta = prufer.get_dx_dtheta();
+    vector<mpf_class> initial_value = {mpf_class(0.5*pi,precision),current_x};
+    // use RungeKutta4 to approximate first root x0
+    RungeKutta4 RK4(initial_value,dx_dtheta);
+    mpf_class h = -1e-3;
+    mpf_class end_x = -pi/2.0;
+    mpf_class end_y = RK4.compute(h, end_x);
+    // improve the precision of x0 via Newton's method
+    // vector<polynomial> initial_function = {p,ortho_polys->getDerivatePm(poly_order)};
+    // NewtonMethod newton(end_y,initial_function,coeff_ODE);
+    // mpf_class next_root = newton.compute_root_with_taylor(taylor_items,newton_eps);
+    mpf_class next_root = end_y;
+    return next_root;
+};
+
 #else
 //do nothing
 #endif

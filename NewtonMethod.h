@@ -78,8 +78,6 @@ mpf_class NewtonMethod::compute_root_with_taylor(mpz_class taylor_order=30,mpz_c
   do {
     next_x = current_x - current_ux / current_dux;
     //compute u(x) and du(x) via taylor expansion.
-    // vector<mpf_class> current_value = {current_ux,current_dux};
-    // vector<mpf_class> next_value = compute_taylor_value(start_x, next_x, start_value, taylor_order, acc);
     //change current_x to start_x
     vector<mpf_class> next_value = compute_taylor_value(start_x, next_x,start_ukx,taylor_order);
     current_ux = next_value.at(0);

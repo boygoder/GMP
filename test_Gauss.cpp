@@ -171,7 +171,7 @@ void test_Hermite_200()
     cout << "compute order " << i << endl;
     GaussianPoint1D gauss = gtable.compute_gaussian_table(i);
     cout << gauss;
-    writeGaussianInfo(dirpaths, gauss);
+    // writeGaussianInfo(dirpaths, gauss);
   }
 }
 
@@ -224,7 +224,7 @@ void test_Lagueree_200()
     cout << "compute order " << i << endl;
     GaussianPoint1D gauss = gtable.compute_gaussian_table(i);
     cout << gauss;
-    writeGaussianInfo(dirpaths, gauss);
+    // writeGaussianInfo(dirpaths, gauss);
    }
 }
 void test_Lagueree_integral()
@@ -234,23 +234,27 @@ void test_Lagueree_integral()
   // should call set_highest_degree
   OrthogonalPolynomails* Pn = new LaguerrePolys();
   GaussIntegralTableGenerator gtable(highest_prec,Pn);
-  GaussianPoint1D gauss  = gtable.compute_gaussian_table(51);
-  vector<mpf_class> coe(101,mpf_class(0,precision));
-  coe.at(100) = 1;
-  polynomial x_100(coe,100);
+  GaussianPoint1D gauss  = gtable.compute_gaussian_table(31);
+  vector<mpf_class> coe(61,mpf_class(0,precision));
+  coe.at(60) = 1;
+  polynomial x_100(coe,60);
   vector<mpf_class> points = gauss.get_points();
   vector<mpf_class> weights = gauss.get_weights();
-  mpf_class res(0,precision);
+  mpf_class res(0,2*precision);
   for(int i = 0; i < points.size(); ++i)
   {
-    res = res + weights.at(i)*x_100(points.at(i));
+    mpf_class ux(0,2*precision);
+    ux = x_100(points.at(i));
+    mpf_class wx(0,2*precision);
+    wx = weights.at(i);
+    res = res + wx*ux;
   }
-  cout << "x^{100} e^{-x} 在[0,infinity]上的积分为:\n";
+  cout << "x^{60} e^{-x} 在[0,infinity]上的积分为:\n";
   cout << fixed << setprecision(256) << res << endl;
   mpf_t theory_t;
   mpf_init2(theory_t,precision);
-  mpf_set_str(theory_t,"9.3326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000e157",10);
-/*   mpf_set_str(theory_t,"71569457046263802294811533723186532165584657342365752577109445058227039255480148842668944867280814080000000000000000000",10); */
+  mpf_set_str(theory_t,"8320987112741390144276341183223364380754172606361245952449277696409600000000000000",10);
+/*   mpf_set_str(theory_t,"9.3326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864e157",10); */
   mpf_class theory(theory_t,precision);
   cout << "理论积分为:\n";
   cout << fixed << setprecision(256) << theory << endl;
@@ -267,10 +271,10 @@ int main()
   //test_Gauss_Legendre_4();
   // test_Legendre_integral();
   //test_Legendre_100();
-  //test_Legendre_200();
+  // test_Legendre_200();
   // test_Hermite_200();
   // test_Hermite_integral();
-  //test_Lagueree_200();
+  // test_Lagueree_200();
   test_Lagueree_integral();
   return 0;
 

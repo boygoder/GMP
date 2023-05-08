@@ -59,9 +59,10 @@ class OrthogonalPolynomails
     virtual vector<mpf_class> getQuadratureWeight(mpz_class degree, vector<mpf_class> roots)
     {
       int len = roots.size();
-      vector<mpf_class> weights(len,mpf_class(0,precision));
+      vector<mpf_class> weights(len,mpf_class(0,2*precision));
       for (int i = 0; i < len; ++i) {
-        mpf_class root = roots.at(i);
+        mpf_class root(0,2*precision);
+        root = roots.at(i);
         weights.at(i) = getQuadratureWeight(degree,root);
       }
       return weights;
@@ -308,14 +309,17 @@ class LaguerrePolys: public OrthogonalPolynomails
     virtual mpf_class getQuadratureWeight(mpz_class degree, mpf_class root)
     {
       mpf_class weight(0,precision);
-      //TODO: write code
       int order = degree.get_ui();
       polynomial dl = derivate_polynomials.at(order);
-      mpf_class dlx(0,precision);
-      dlx = dl(root);
-      mpf_class denominator(0,precision);
-      denominator = root*dlx*dlx;
-      weight = mpf_class(1.0,precision)/denominator;
+      mpf_class dlx1(0,2*precision);
+      dlx1 = dl(root);
+      mpf_class dlx2(0,2*precision);
+      dlx2 = dlx1*dlx1;
+      mpf_class root1(0,2*precision);
+      root1 = root;
+      mpf_class denominator(0,2*precision);
+      denominator = root1*dlx2;
+      weight = mpf_class(1.0,2*precision)/denominator;
       return weight;
     }
   private:
@@ -347,7 +351,8 @@ class LaguerrePolys: public OrthogonalPolynomails
         polynomial tmp(coeff_tmp,degree_tmp);
         polynomial pi = tmp*polynomials.at(i-1) - (recur[3]/recur[0])*polynomials.at(i-2);
         polynomials.at(i) = pi;
-        polynomial pi_d = tmp*derivate_polynomials.at(i-1) - (recur[3]/recur[0])*derivate_polynomials.at(i-2) + (recur[2]/recur[0])*polynomials.at(i-1);
+        polynomial pi_d = tmp*derivate_polynomials.at(i-1) - (recur[3]/recur[0])*derivate_polynomials.at(i-2) + (recur[2]/recur[0])*polynomials.at(i-1); 
+        // polynomial pi_d = derivate(pi);
         derivate_polynomials.at(i) = pi_d;
       }
     };
