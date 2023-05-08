@@ -1,3 +1,4 @@
+#include <gmp.h>
 #include <iomanip>
 #include <vector>
 #include "GaussianPoint.h"
@@ -89,38 +90,31 @@ void test_Gauss_Legendre_4()
   cout << "四阶积分表完毕\n";
 }
 
-void test_Legendre_80()
+void test_Legendre_integral()
 {
-  cout << "test gauss for legendre 51:\n";
-  string dirpaths = "GaussPntDoc/Interval/Legendre";
-  mpz_class highest_prec = 80;
+  cout << "test gauss integral for legendre :\n";
+  mpz_class highest_prec = 100;
   // should call set_highest_degree
   OrthogonalPolynomails* Pn = new LegendrePolys();
   GaussIntegralTableGenerator gtable(highest_prec,Pn);
-  //vector<GaussianPoint1D> gausstable = gtable.compute_gaussian_table();
-  // for (int i = 1; i <= 41; ++i)
-  // {
-  //   GaussianPoint1D gauss = gtable.compute_gaussian_table(i);
-  //   cout << gauss;
-  //   writeGaussianInfo(dirpaths, gauss);
-  // }
-  GaussianPoint1D gauss  = gtable.compute_gaussian_table(41);
-  vector<mpf_class> coe(81,mpf_class(0,precision));
-  coe.at(80) = 1;
-  polynomial x_80(coe,80);
+  GaussianPoint1D gauss  = gtable.compute_gaussian_table(51);
+  vector<mpf_class> coe(101,mpf_class(0,precision));
+  coe.at(100) = 1;
+  polynomial x_100(coe,100);
   vector<mpf_class> points = gauss.get_points();
   vector<mpf_class> weights = gauss.get_weights();
   mpf_class res(0,precision);
   for(int i = 0; i < points.size(); ++i)
   {
-    res = res + weights.at(i)*x_80(points.at(i));
+    res = res + weights.at(i)*x_100(points.at(i));
   }
-  cout << "x^{80} 在[-1,1]上的积分为:\n";
-  cout << fixed << setprecision(80) << res << endl;
-  mpf_class theory = mpf_class(2.0,precision)/mpf_class(81,precision);
+  cout << "x^{100} 在[-1,1]上的积分为:\n";
+  cout << fixed << setprecision(256) << res << endl;
+  mpf_class theory = mpf_class(2.0,precision)/mpf_class(101,precision);
   cout << "理论积分为:\n";
-  cout << fixed << setprecision(80) << theory << endl;
-  cout << fixed << setprecision(80) << res-theory << endl;  
+  cout << fixed << setprecision(256) << theory << endl;
+  cout << "误差为:\n";
+  cout << fixed << setprecision(256) << res-theory << endl;  
   assert(abs(res-theory) < 1e-80);
 }
 
@@ -157,7 +151,7 @@ void test_Legendre_200()
     cout << "compute order " << i << endl;
     GaussianPoint1D gauss = gtable.compute_gaussian_table(i);
     cout << gauss;
-    writeGaussianInfo(dirpaths, gauss);
+    // writeGaussianInfo(dirpaths, gauss);
   }
 }
 
@@ -165,14 +159,14 @@ void test_Hermite_200()
 {
   cout << "test gauss for Hermite 100:\n";
   string dirpaths = "GaussPntDoc/Interval/Hermite";
-  mpz_class highest_prec = 11;
+  mpz_class highest_prec = 199;
   // should call set_highest_degree
   OrthogonalPolynomails* Pn = new HermitePolys();
   GaussIntegralTableGenerator gtable(highest_prec,Pn);
-  gtable.set_taylor_items(60);
-  gtable.set_newton_eps(16);
+  gtable.set_taylor_items(120);
+  gtable.set_newton_eps(80);
   // vector<GaussianPoint1D> gausstable = gtable.compute_gaussian_table();
-  for (int i = 1; i <= 6; ++i)
+  for (int i = 100; i <= 100; ++i)
   {
     cout << "compute order " << i << endl;
     GaussianPoint1D gauss = gtable.compute_gaussian_table(i);
@@ -181,33 +175,103 @@ void test_Hermite_200()
   }
 }
 
-// void test_Lagueree_200()
-// {
-//   cout << "test gauss for Lagueree 100:\n";
-//   string dirpaths = "GaussPntDoc/Interval/Lagueree";
-//   mpz_class highest_prec = 199;
-//   // should call set_highest_degree
-//   OrthogonalPolynomails* Pn = new LaguereePolys();
-//   GaussIntegralTableGenerator gtable(highest_prec,Pn);
-//   // vector<GaussianPoint1D> gausstable = gtable.compute_gaussian_table();
-//   for (int i = 100; i <= 100; ++i)
-//   {
-//     cout << "compute order " << i << endl;
-//     GaussianPoint1D gauss = gtable.compute_gaussian_table(i);
-//     cout << gauss;
-//     writeGaussianInfo(dirpaths, gauss);
-//   }
-// }
 
+void test_Hermite_integral()
+{
+ cout << "test gauss integral for Hermite :\n";
+  mpz_class highest_prec = 100;
+  // should call set_highest_degree
+  OrthogonalPolynomails* Pn = new HermitePolys();
+  GaussIntegralTableGenerator gtable(highest_prec,Pn);
+  GaussianPoint1D gauss  = gtable.compute_gaussian_table(51);
+  vector<mpf_class> coe(101,mpf_class(0,precision));
+  coe.at(100) = 1;
+  polynomial x_100(coe,100);
+  vector<mpf_class> points = gauss.get_points();
+  vector<mpf_class> weights = gauss.get_weights();
+  mpf_class res(0,precision);
+  for(int i = 0; i < points.size(); ++i)
+  {
+    res = res + weights.at(i)*x_100(points.at(i));
+  }
+  cout << "x^{100} e^{-x^2} 在[-infinity,infinity]上的积分为:\n";
+  cout << fixed << setprecision(256) << res << endl;
+  mpf_t theory_t;
+  mpf_init2(theory_t,precision);
+  mpf_set_str(theory_t,"4.2904629123519598109157551960589376738242902258244938240430485310826851318323799037707311554284993957036806886756317727235137848794812440419209013632578077067211610203085038864055272776263386097646164e63",10);
+  mpf_class theory(theory_t);
+  cout << "理论积分为:\n";
+  cout << fixed << setprecision(256) << theory << endl;
+ cout << "误差为:\n";
+  cout << fixed << setprecision(256) << res-theory << endl;  
+  assert(abs(res-theory) < 1e-80);
+  mpf_clear(theory_t);
+}
+
+void test_Lagueree_200()
+{
+  cout << "test gauss for Lagueree 100:\n";
+  string dirpaths = "GaussPntDoc/Interval/Lagueree";
+  mpz_class highest_prec = 199;
+  // should call set_highest_degree
+  OrthogonalPolynomails* Pn = new LaguerrePolys();
+  GaussIntegralTableGenerator gtable(highest_prec,Pn);
+  gtable.set_taylor_items(120);
+  gtable.set_newton_eps(80);
+  // vector<GaussianPoint1D> gausstable = gtable.compute_gaussian_table();
+  for (int i = 100; i <= 100; ++i)
+  {
+    cout << "compute order " << i << endl;
+    GaussianPoint1D gauss = gtable.compute_gaussian_table(i);
+    cout << gauss;
+    writeGaussianInfo(dirpaths, gauss);
+   }
+}
+void test_Lagueree_integral()
+{
+ cout << "test gauss integral for Lagueree :\n";
+  mpz_class highest_prec = 100;
+  // should call set_highest_degree
+  OrthogonalPolynomails* Pn = new LaguerrePolys();
+  GaussIntegralTableGenerator gtable(highest_prec,Pn);
+  GaussianPoint1D gauss  = gtable.compute_gaussian_table(51);
+  vector<mpf_class> coe(101,mpf_class(0,precision));
+  coe.at(100) = 1;
+  polynomial x_100(coe,100);
+  vector<mpf_class> points = gauss.get_points();
+  vector<mpf_class> weights = gauss.get_weights();
+  mpf_class res(0,precision);
+  for(int i = 0; i < points.size(); ++i)
+  {
+    res = res + weights.at(i)*x_100(points.at(i));
+  }
+  cout << "x^{100} e^{-x} 在[0,infinity]上的积分为:\n";
+  cout << fixed << setprecision(256) << res << endl;
+  mpf_t theory_t;
+  mpf_init2(theory_t,precision);
+  mpf_set_str(theory_t,"9.3326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000e157",10);
+/*   mpf_set_str(theory_t,"71569457046263802294811533723186532165584657342365752577109445058227039255480148842668944867280814080000000000000000000",10); */
+  mpf_class theory(theory_t,precision);
+  cout << "理论积分为:\n";
+  cout << fixed << setprecision(256) << theory << endl;
+ cout << "误差为:\n";
+  cout << fixed << setprecision(256) << res-theory << endl;  
+  assert(abs((res-theory)/theory) < 1e-80);
+  mpf_clear(theory_t);
+}
 int main()
 {
   //test_copy();
   //test_transform();
   //test_Gauss_Legendre_3();
   //test_Gauss_Legendre_4();
-  //test_Legendre_80();
+  // test_Legendre_integral();
   //test_Legendre_100();
   //test_Legendre_200();
-  test_Hermite_200();
+  // test_Hermite_200();
+  // test_Hermite_integral();
+  //test_Lagueree_200();
+  test_Lagueree_integral();
   return 0;
+
 }

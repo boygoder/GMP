@@ -25,8 +25,11 @@ class GaussIntegralTableGenerator
     void set_taylor_items(mpz_class _taylor_items);
     void set_newton_eps(mpz_class _newton_eps);
   private:
-    mpf_class compute_first_root(mpz_class poly_order);
+    mpf_class compute_first_root_symmetric(mpz_class poly_order);
+    mpf_class compute_first_root_unsymmetric(mpz_class poly_order);
     mpf_class compute_subsequent_root(mpz_class poly_order,mpf_class current_x);
+    GaussianPoint1D compute_gaussian_symmetric(mpz_class spec_order);
+    GaussianPoint1D compute_gaussian_unsymmetric(mpz_class spec_order);
 };
 
 GaussIntegralTableGenerator::GaussIntegralTableGenerator()
@@ -63,23 +66,22 @@ const vector<GaussianPoint1D>& GaussIntegralTableGenerator::compute_gaussian_tab
   }
   return table;
 };
-
-GaussianPoint1D GaussIntegralTableGenerator::compute_gaussian_table(mpz_class spec_order)
+GaussianPoint1D GaussIntegralTableGenerator::compute_gaussian_symmetric(mpz_class spec_order)
 {
+ // 如果是Legendre多项式或Hermite多项式
   int point_num = spec_order.get_ui();
   mpz_class is_odd = point_num%2;
   ortho_polys->set_highest_degree(spec_order);
-  // 如果是Legendre多项式
   polynomial p = ortho_polys->getPm(spec_order);
   polynomial dp = ortho_polys->getDerivatePm(spec_order);
+    //if n is odd, (n-1)/2 = (n+1)/2 - 1;
+  //if n is even ,(n)/2;
   int x_num = ceil(point_num/2.0) - 1;
   // 奇偶性，先求大于等于0的一侧，然后对称。
   vector<mpf_class> half_gauss_point(x_num+1,mpf_class(0,precision));
   cout << "compute first root:\n";
-  mpf_class x0 = compute_first_root(spec_order);
+  mpf_class x0 = compute_first_root_symmetric(spec_order);
   half_gauss_point.at(0) = x0;
-  //if n is odd, (n-1)/2 = (n+1)/2 - 1;
-  //if n is even ,(n)/2;
   cout << "compute subsequent root:\n";
   for(int i = 1; i <= x_num; ++i) {
     mpf_class next_x = compute_subsequent_root(spec_order,half_gauss_point.at(i-1));
@@ -115,11 +117,54 @@ GaussianPoint1D GaussIntegralTableGenerator::compute_gaussian_table(mpz_class sp
   
   GaussianPoint1D gauss(point_num,gauss_point,weight);
   return gauss;
-};
 
-mpf_class GaussIntegralTableGenerator::compute_first_root(mpz_class poly_order)
+};
+GaussianPoint1D GaussIntegralTableGenerator::compute_gaussian_unsymmetric(mpz_class spec_order)
 {
-  //如果是Legendre多项式
+// 如果是Legendre多项式或Hermite多项式
+  int point_num = spec_order.get_ui();
+  ortho_polys->set_highest_degree(spec_order);
+  polynomial p = ortho_polys->getPm(spec_order);
+  polynomial dp = ortho_polys->getDerivatePm(spec_order);
+  vector<mpf_class> weight(point_num,mpf_class(0,precision)); 
+  vector<mpf_class> gauss_point(point_num,mpf_class(0,precision));
+  cout << "compute first root:\n";
+  mpf_class x0 = compute_first_root_unsymmetric(spec_order);
+  gauss_point.at(0) = x0;
+  cout << "compute subsequent root:\n";
+  for(int i = 1; i < point_num; ++i) {
+    mpf_class next_x = compute_subsequent_root(spec_order,gauss_point.at(i-1));
+    gauss_point.at(i) = next_x;
+  }
+  //TODO:计算积分权重
+  weight = ortho_polys->getQuadratureWeight(spec_order,gauss_point);
+  
+  GaussianPoint1D gauss(point_num,gauss_point,weight);
+  return gauss;
+
+};
+GaussianPoint1D GaussIntegralTableGenerator::compute_gaussian_table(mpz_class spec_order)
+{
+
+  if (typeid(*ortho_polys) == typeid(LegendrePolys) or typeid(*ortho_polys) == typeid(HermitePolys))
+  {
+    GaussianPoint1D gauss = compute_gaussian_symmetric(spec_order);
+    return gauss;
+  }
+  else if (typeid(*ortho_polys) == typeid(LaguerrePolys))
+  {
+    GaussianPoint1D gauss = compute_gaussian_unsymmetric(spec_order);
+    return gauss;
+  }
+  else {
+    cout << "Sorry, now we don't have code for this kind of polynomials\n";
+    exit(1);
+  }
+ };
+
+mpf_class GaussIntegralTableGenerator::compute_first_root_symmetric(mpz_class poly_order)
+{
+  //如果是Legendre多项式或Hermite多项式
   mpz_class is_odd = poly_order%2;
   // 对于奇数阶,x=0即为第一个根。
   if (is_odd != 0) {
@@ -131,7 +176,7 @@ mpf_class GaussIntegralTableGenerator::compute_first_root(mpz_class poly_order)
     vector<polynomial> coeff_ODE = ortho_polys->coefficientsOfODE(poly_order);
     PruferTransformer prufer(p,coeff_ODE);
     auto dx_dtheta = prufer.get_dx_dtheta();
-    vector<mpf_class> initial_value = {mpf_class(0,precision),prufer.theta_x_value(0)};
+    vector<mpf_class> initial_value = {mpf_class(0,precision),mpf_class(0,precision)};
     // use RungeKutta4 to approximate first root x0
     RungeKutta4 RK4(initial_value,dx_dtheta);
     mpf_class h = -1e-3;
@@ -145,7 +190,30 @@ mpf_class GaussIntegralTableGenerator::compute_first_root(mpz_class poly_order)
     return first_root;
   }
 };
-
+mpf_class GaussIntegralTableGenerator::compute_first_root_unsymmetric(mpz_class poly_order)
+{
+  if (typeid(*ortho_polys) != typeid(LaguerrePolys)) {
+    cout << "we don't know how to compute first root for this unsymmetric polynomials\n";
+    exit(1);
+  }
+  mpf_class inequality_value = 1.0/(2.0*poly_order+1.0);
+    polynomial p = ortho_polys->getPm(poly_order);
+    vector<polynomial> coeff_ODE = ortho_polys->coefficientsOfODE(poly_order);
+    PruferTransformer prufer(p,coeff_ODE);
+    auto dx_dtheta = prufer.get_dx_dtheta();
+    vector<mpf_class> initial_value = {prufer.theta_x_value(inequality_value),inequality_value};
+    // use RungeKutta4 to approximate first root x0
+    RungeKutta4 RK4(initial_value,dx_dtheta);
+    mpf_class h = -1e-3;
+    mpf_class end_x = -pi/2.0;
+    mpf_class end_y = RK4.compute(h, end_x);
+    polynomial dp = ortho_polys->getDerivatePm(poly_order);
+    vector<polynomial> initial_function = {p,dp};
+    // improve the precision of x0 via Newton's method
+    NewtonMethod newton(end_y,initial_function,coeff_ODE);
+    mpf_class first_root = newton.compute_root(newton_eps); 
+    return first_root;
+};
 mpf_class GaussIntegralTableGenerator::compute_subsequent_root(mpz_class poly_order,mpf_class current_x)
 {
     polynomial p = ortho_polys->getPm(poly_order);

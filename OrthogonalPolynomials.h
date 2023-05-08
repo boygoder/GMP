@@ -315,7 +315,7 @@ class LaguerrePolys: public OrthogonalPolynomails
       dlx = dl(root);
       mpf_class denominator(0,precision);
       denominator = root*dlx*dlx;
-      weight = mpf_class(1,precision)/denominator;
+      weight = mpf_class(1.0,precision)/denominator;
       return weight;
     }
   private:
