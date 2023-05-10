@@ -321,6 +321,18 @@ class LaguerrePolys: public OrthogonalPolynomails
       denominator = root1*dlx2;
       weight = mpf_class(1.0,2*precision)/denominator;
       return weight;
+      // mpf_class weight(0,precision);
+      // int order = degree.get_ui();
+      // mpf_class dlx(0,8*precision);
+      // dlx = polynomials.at(order-1)(root);
+      // mpf_class dlx2(0,4*precision);
+      // dlx2 = dlx*dlx;
+      // mpf_class n2((degree)*(degree),4*precision);
+      // mpf_class denominator(0,2*precision);
+      // denominator = n2*dlx2;
+      // weight = mpf_class(root,2*precision)/denominator;
+      // return weight;
+
     }
   private:
     //compute polynomial and derivate under highest_degree

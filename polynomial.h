@@ -140,12 +140,20 @@ public:
 	// }
 	friend mpf_class pointValue(mpf_class x, polynomial a)
 	{
-		mpz_class a1 = a.degree;
-		vector<mpf_class> a2(a.coeff);
-		mpf_class c(0,precision);
-		for (int i = 0; i <= a1.get_ui(); i++)
-			c = c + a2[i] * mpf_class_pow_ui(x, i);
-		return c;
+		// mpz_class a1 = a.degree;
+		// vector<mpf_class> a2(a.coeff);
+		// mpf_class c(0,precision);
+		// for (int i = 0; i <= a1.get_ui(); i++)
+		// 	c = c + a2[i] * mpf_class_pow_ui(x, i);
+		// return c;
+       vector<mpf_class> an = a.coeff;
+    //reverse(a.begin(),a.end());
+    vector<mpf_class> bn(an.size(),mpf_class(0,precision));
+    unsigned int order = a.degree.get_ui();
+    bn.at(order) = an.at(order);
+		for (int i = 1; i <= order; i++)
+			bn.at(order-i) = bn.at(order-(i-1))*x + an.at(order-i);
+		return bn.at(0);  
 	}
   mpf_class operator()(mpf_class x)
   {

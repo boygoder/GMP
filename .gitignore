@@ -1,2 +1,23 @@
-*.o
-test/
+*
+
+## 添加需要管理的文件夹
+!/test/
+!/test/**/
+!/GaussPntDoc/
+!/GaussPntDoc/**/
+
+## 添加指定后缀文件
+!*.cpp
+!*.h
+!*.c
+!.gitignore
+!Makefile
+
+## 忽视
+**/CMakeCache.txt
+**/CMakeUserPresets.json
+**/CTestTestfile.cmake
+**/CPackConfig.cmake
+**/cmake_install.cmake
+**/install_manifest.txt
+**/compile_commands.json

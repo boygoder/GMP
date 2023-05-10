@@ -1,13 +1,11 @@
 #include <gmp.h>
-#include <iomanip>
-#include <vector>
 #include "GaussianPoint.h"
 #include "OrthogonalPolynomials.h"
 #include "gmptools.h"
-#include <algorithm>
-#include <iostream>
 #include "GaussIntergalTableGenerator.h"
 #include "polynomial.h"
+
+
 using namespace std;
 void test_copy()
 {
@@ -269,14 +267,14 @@ int main()
   //test_copy();
   //test_transform();
   //test_Gauss_Legendre_3();
-  //test_Gauss_Legendre_4();
+  test_Gauss_Legendre_4();
   // test_Legendre_integral();
   //test_Legendre_100();
   // test_Legendre_200();
   // test_Hermite_200();
   // test_Hermite_integral();
   // test_Lagueree_200();
-  test_Lagueree_integral();
+  // test_Lagueree_integral();
   return 0;
 
 }
