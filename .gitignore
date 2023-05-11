@@ -15,6 +15,7 @@
 !Makefile
 !CMakeLists.txt
 !*.png
+!*.sh
 ## 忽视
 **/CMakeCache.txt
 **/CMakeUserPresets.json
