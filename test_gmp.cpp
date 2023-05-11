@@ -2,7 +2,7 @@
 #include <iostream>
 #include "OrthogonalPolynomials.h"
 #include <iomanip>
-
+#include <math.h>
 void test_prec()
 {
   mpf_class a1(0,256);

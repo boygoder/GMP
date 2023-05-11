@@ -1,9 +1,12 @@
 #include "NewtonMethod.h"
 #include "OrthogonalPolynomials.h"
-#include <iomanip>
-#include "assert.h"
 #include "RungeKutta.h"
 #include "PruferTransformer.h"
+#include <iomanip>
+#include "assert.h"
+#include <iostream>
+using namespace std;
+
 void test_Legendre2()
 {
   cout << "test NewtonMethod for Legendre polynomials without talor:\n";

@@ -1,7 +1,7 @@
 #include "OrthogonalPolynomials.h"
 #include "polynomial.h"
-#include <gmpxx.h>
-
+#include <iostream>
+using namespace std;
 
 void test_Legendre()
 {

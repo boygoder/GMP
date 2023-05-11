@@ -1,5 +1,8 @@
 #include "PruferTransformer.h"
 #include "OrthogonalPolynomials.h"
+#include <iostream>
+#include "math.h"
+using namespace std;
 void test_Lengendre_2()
 {
   LegendrePolys Pn(mpz_class(2));

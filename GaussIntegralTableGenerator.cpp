@@ -1,48 +1,22 @@
-#ifndef __GAUSSIANINTERGRALTABLEGENERATOR__
-#define __GAUSSIANINTERGRALTABLEGENERATOR__
-
-#include "GaussianPoint.h"
-#include "OrthogonalPolynomials.h"
+#include "GaussIntegralTableGenerator.h"
 #include "PruferTransformer.h"
 #include "RungeKutta.h"
 #include "NewtonMethod.h"
 #include <algorithm>
-#include <gmp.h>
-#include <memory>
-class GaussIntegralTableGenerator 
-{
-  private:
-    mpz_class highest_prec;
-    unique_ptr<OrthogonalPolynomails> ortho_polys;
-    vector<GaussianPoint1D> table;
-    mpz_class taylor_items = 120;
-    mpz_class newton_eps = 80;
-  public:
-    GaussIntegralTableGenerator();
-    GaussIntegralTableGenerator(mpz_class _hightest_prec, OrthogonalPolynomails* _ortho_polys);
-    const vector<GaussianPoint1D>& compute_gaussian_table();
-    GaussianPoint1D compute_gaussian_table(mpz_class spec_prec);
-    void set_taylor_items(mpz_class _taylor_items);
-    void set_newton_eps(mpz_class _newton_eps);
-  private:
-    mpf_class compute_first_root_symmetric(mpz_class poly_order);
-    mpf_class compute_first_root_unsymmetric(mpz_class poly_order);
-    mpf_class compute_subsequent_root(mpz_class poly_order,mpf_class current_x);
-    mpf_class compute_subsequent_root_unsymmetric(mpz_class poly_order,mpf_class current_x);
-    GaussianPoint1D compute_gaussian_symmetric(mpz_class spec_order);
-    GaussianPoint1D compute_gaussian_unsymmetric(mpz_class spec_order);
-};
-
+#include "math.h"
+#include <iostream>
+#include <iomanip>
+using namespace std;
 GaussIntegralTableGenerator::GaussIntegralTableGenerator()
   :highest_prec(1)
 {
   ortho_polys = make_unique<LegendrePolys>(1);
 };
 
-GaussIntegralTableGenerator::GaussIntegralTableGenerator(mpz_class _highest_prec, OrthogonalPolynomails* _ortho_polys)
+GaussIntegralTableGenerator::GaussIntegralTableGenerator(mpz_class _highest_prec, OrthogonalPolynomials* _ortho_polys)
 {
   highest_prec = max(mpz_class(1),_highest_prec);
-  unique_ptr<OrthogonalPolynomails> ptr(_ortho_polys);
+  unique_ptr<OrthogonalPolynomials> ptr(_ortho_polys);
   ortho_polys = std::move(ptr);
 }
 void GaussIntegralTableGenerator::set_taylor_items(mpz_class _taylor_items)
@@ -271,7 +245,3 @@ mpf_class GaussIntegralTableGenerator::compute_subsequent_root_unsymmetric(mpz_c
     mpf_class next_root = end_y;
     return next_root;
 };
-
-#else
-//do nothing
-#endif

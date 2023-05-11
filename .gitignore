@@ -12,7 +12,7 @@
 !*.c
 !.gitignore
 !Makefile
-
+!CMakeLists.txt
 ## 忽视
 **/CMakeCache.txt
 **/CMakeUserPresets.json
@@ -21,3 +21,4 @@
 **/cmake_install.cmake
 **/install_manifest.txt
 **/compile_commands.json
+*.o

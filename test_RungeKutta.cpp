@@ -1,7 +1,9 @@
 #include "RungeKutta.h"
 #include "PruferTransformer.h"
 #include "OrthogonalPolynomials.h"
-
+#include <iostream>
+#include "math.h"
+using namespace std;
 
 void test_Prufer_for_Legendre2()
 {
